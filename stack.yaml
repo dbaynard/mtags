@@ -1,0 +1,8 @@
+resolver: https://gist.github.com/dbaynard/9693107a883a6282f52f22785d0072e2/raw/9d30d4ffc93f8b5a9cae26d75f3f9e4ae1efb7b6
+
+packages:
+- 'mtags'
+
+extra-deps: []
+
+allow-newer: true

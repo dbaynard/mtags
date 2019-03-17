@@ -1,0 +1,55 @@
+name: mtags
+version: 0.1.0.0
+github: "dbaynard/mtags"
+author: "David Baynard <haskell@baynard.me>"
+maintainer: "David Baynard <haskell@baynard.me>"
+copyright: "2019 David Baynard"
+synopsis: Generate ctags-compatible tags for (pandoc) markdown files.
+description: |
+  See [README.md](https://github.com/dbaynard/mtags)
+github: dbaynard/mtags
+license: BSD-3-Clause OR Apache-2.0
+category: Development
+
+extra-source-files:
+- ../README.md
+- ../LICENSE
+
+ghc-options:
+- -Wall
+- -Wincomplete-uni-patterns
+- -Wincomplete-record-updates
+#- -Wmissing-import-lists
+- -Wcompat
+- -Wnoncanonical-monad-instances
+- -Wnoncanonical-monadfail-instances
+
+dependencies:
+- base >= 4.7 && < 5
+- rio
+
+library:
+  source-dirs: src
+
+executables:
+  mtags-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - mtags
+
+tests:
+  mtags-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - mtags
+    - hspec
