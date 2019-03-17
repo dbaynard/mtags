@@ -1,0 +1,40 @@
+!_TAG_FILE_FORMAT	2
+!_TAG_FILE_SORTED	1
+Active [E. coli]{.philo} promoters	cry.md	/^### Active [E. coli]{.philo} promoters$/;"	s	line:303	section:Results|Cloning of [cry1Ac]{.gene} fusions in [E. coli]{.philo}
+Analysis of proteins	cry.md	/^## Analysis of proteins$/;"	s	line:197	section:Methods
+Analysis of proteins	cry.md	/^## Analysis of proteins$/;"	s	line:469	section:Results
+Analysis of proteins	cry.md	/^## Analysis of proteins$/;"	s	line:704	section:Discussion
+Antibody fusions	cry.md	/^### Antibody fusions$/;"	s	line:192	section:Methods|Strain construction
+Choice of [Cry1Ac]{.protein} variants	cry.md	/^## Choice of [Cry1Ac]{.protein} variants$/;"	s	line:45	section:Methods
+Cloning of [cry1Ac]{.gene} fusions in [E. coli]{.philo}	cry.md	/^## Cloning of [cry1Ac]{.gene} fusions in [E. coli]{.philo}$/;"	s	line:220	section:Results
+Complementing [[B. thuringiensis]{.philo} subsp. [kurstaki]{.philo} HD-73]{.strain}	cry.md	/^## Complementing [[B. thuringiensis]{.philo} subsp. [kurstaki]{.philo} HD-73]{.strain}$/;"	s	line:331	section:Results
+Complementing [[B. thuringiensis]{.philo} subsp. [kurstaki]{.philo} HD-73]{.strain}	cry.md	/^## Complementing [[B. thuringiensis]{.philo} subsp. [kurstaki]{.philo} HD-73]{.strain}$/;"	s	line:619	section:Discussion
+Complementing [[B. thuringiensis]{.philo} subsp. [kurstaki]{.philo} HD-73]{.strain}	cry.md	/^### Complementing [[B. thuringiensis]{.philo} subsp. [kurstaki]{.philo} HD-73]{.strain}$/;"	s	line:175	section:Methods|Strain construction
+Conclusions	cry.md	/^# Conclusions$/;"	s	line:813
+Direct isolation of solublized crystal proteins	cry.md	/^## Direct isolation of solublized crystal proteins$/;"	s	line:447	section:Results
+Direct isolation of solublized crystal proteins	cry.md	/^## Direct isolation of solublized crystal proteins$/;"	s	line:681	section:Discussion
+Direct isolation of solublized crystal proteins	cry.md	/^### Direct isolation of solublized crystal proteins$/;"	s	line:199	section:Methods|Analysis of proteins
+Discussion	cry.md	/^# Discussion$/;"	s	line:544
+Fractionation	cry.md	/^### Fractionation$/;"	s	line:205	section:Methods|Analysis of proteins
+Introduction	cry.md	/^# Introduction$/;"	s	line:13
+Methods	cry.md	/^# Methods$/;"	s	line:34
+Microscopy	cry.md	/^## Microscopy$/;"	s	line:36	section:Methods
+Other [Bacilli]{.philo}	cry.md	/^## Other [Bacilli]{.philo}$/;"	s	line:408	section:Results
+Other [Bacilli]{.philo}	cry.md	/^## Other [Bacilli]{.philo}$/;"	s	line:651	section:Discussion
+Other [Bacilli]{.philo}	cry.md	/^### Other [Bacilli]{.philo}$/;"	s	line:180	section:Methods|Strain construction
+Processing [B. thuringiensis]{.philo} spores	cry.md	/^## Processing [B. thuringiensis]{.philo} spores$/;"	s	line:710	section:Discussion
+Results	cry.md	/^# Results$/;"	s	line:218
+Spore washing & crystal isolation	cry.md	/^### Spore washing & crystal isolation$/;"	s	line:715	section:Discussion|Processing [B. thuringiensis]{.philo} spores
+Strain construction	cry.md	/^## Strain construction$/;"	s	line:140	section:Methods
+Sub-unit fusions	cry.md	/^### Sub-unit fusions$/;"	s	line:149	section:Methods|Strain construction
+Unintended protein expression in [E. coli]{.philo}	cry.md	/^## Unintended protein expression in [E. coli]{.philo}$/;"	s	line:546	section:Discussion
+With antibodies	cry.md	/^## With antibodies$/;"	s	line:845	section:Conclusions
+[B. cereus]{.philo}	cry.md	/^### [B. cereus]{.philo}$/;"	s	line:667	section:Discussion|Other [Bacilli]{.philo}
+[B. subtilis]{.philo}	cry.md	/^### [B. subtilis]{.philo}$/;"	s	line:438	section:Results|Other [Bacilli]{.philo}
+[B. subtilis]{.philo}	cry.md	/^### [B. subtilis]{.philo}$/;"	s	line:655	section:Discussion|Other [Bacilli]{.philo}
+[B. subtilis]{.philo} specialization	cry.md	/^### [B. subtilis]{.philo} specialization$/;"	s	line:184	section:Methods|Strain construction
+[Cry]{.protein}–Ab fusions	cry.md	/^## [Cry]{.protein}–Ab fusions$/;"	s	line:497	section:Results
+[Cry]{.protein}–Ab fusions	cry.md	/^## [Cry]{.protein}–Ab fusions$/;"	s	line:802	section:Discussion
+[Cry]{.protein}–antibody fusions	cry.md	/^## [Cry]{.protein}–antibody fusions$/;"	s	line:104	section:Methods
+[NNPP]{.abbr .acf abbr="NNPP" expanded="neural network promoter prediction"}	cry.md	/^## [NNPP]{.abbr .acf abbr="NNPP" expanded="neural network promoter prediction"}$/;"	s	line:211	section:Methods
+[[B. thuringiensis]{.philo} subsp. [finitimus]{.philo} YBT-020]{.strain}	cry.md	/^### [[B. thuringiensis]{.philo} subsp. [finitimus]{.philo} YBT-020]{.strain}$/;"	s	line:674	section:Discussion|Other [Bacilli]{.philo}
