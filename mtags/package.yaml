@@ -25,11 +25,13 @@ ghc-options:
 - -Wnoncanonical-monadfail-instances
 
 dependencies:
-- base >= 4.7 && < 5
+- base >= 4.12.0.0 && < 5
 - rio
 
 library:
   source-dirs: src
+  exposed-modules:
+  - MTags
 
 executables:
   mtags-exe:
