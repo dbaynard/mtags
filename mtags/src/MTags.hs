@@ -107,19 +107,23 @@ instance Pretty MTag where
     ]
 
 newtype TagName = TagName Text
+  deriving stock (Generic)
   deriving newtype (Show, Eq, IsString, Pretty)
   deriving Validity via (NoChar "\t" Text)
 
 newtype TagFile = TagFile FilePath
+  deriving stock (Generic)
   deriving newtype (Show, Eq, IsString, Pretty)
   deriving Validity via (NoChar "\t" String)
 
 -- TODO need to apply tag-security restrictions
 newtype TagAddress = TagAddress Text
+  deriving stock (Generic)
   deriving newtype (Show, Eq, IsString, Pretty, Validity)
 
 -- TODO May not contain special characters.
 newtype TagFields = TagFields (Set FieldValue)
+  deriving stock (Generic)
   deriving newtype (Show, Eq, Validity)
 
 instance Pretty TagFields where
@@ -137,6 +141,7 @@ instance Pretty FieldValue where
   prettyList = foldMap $ (tab <>) . pretty
 
 newtype TagKind = TagKind Text
+  deriving stock (Generic)
   deriving newtype (Show, Eq, Ord, IsString, Pretty)
   deriving Validity via (NoChar ":" Text)
 
