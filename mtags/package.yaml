@@ -35,6 +35,9 @@ library:
   dependencies:
   - generic-lens
   - prettyprinter
+  - validity
+  - validity-containers
+  - validity-text
 
 executables:
   mtags-exe:

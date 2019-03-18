@@ -6,7 +6,7 @@
 -- License     : BSD-3-Clause OR Apache-2.0
 -- Maintainer  : David Baynard <haskell@baynard.me>
 -- Stability   : experimental
--- Portability : unknown
+-- Portability : GHC
 --
 -- From neovim’s tag-file-format help text:
 --
@@ -52,22 +52,34 @@
 --                 (with an empty value).  It is used for a static tag.
 -- @
 
+{-# LANGUAGE DataKinds                  #-}
+{-# LANGUAGE DeriveAnyClass             #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE DerivingVia                #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE PackageImports             #-}
 {-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE TypeApplications           #-}
+{-# LANGUAGE TypeInType                 #-}
 
 module MTags
   ( module MTags
   ) where
 
+import           "base" Data.Coerce                        (coerce)
 import           "generic-lens" Data.Generics.Product
 import           "prettyprinter" Data.Text.Prettyprint.Doc
+import           "validity" Data.Validity
+import           "validity-containers" Data.Validity.Set   ()
+import           "validity-text" Data.Validity.Text        ()
+import           "base" GHC.TypeLits                       (Symbol)
 import           "rio" RIO
+import qualified "rio" RIO.List                            as L (any)
+import qualified "rio" RIO.Text                            as T (any)
 
 --------------------------------------------------
 -- * Individual tags
@@ -81,6 +93,7 @@ data MTag = MTag
   , fields     :: TagFields  -- ^ Optional fields
   }
   deriving stock (Show, Eq, Generic)
+  deriving anyclass (Validity)
 
 instance Pretty MTag where
   pretty m = mconcat
@@ -93,29 +106,29 @@ instance Pretty MTag where
     , m ^. typed @TagAddress . to pretty
     ]
 
--- TODO need to ensure this contains no tab character
 newtype TagName = TagName Text
   deriving newtype (Show, Eq, IsString, Pretty)
+  deriving Validity via (NoChar "\t" Text)
 
--- TODO need to ensure this contains no tab character
 newtype TagFile = TagFile FilePath
   deriving newtype (Show, Eq, IsString, Pretty)
+  deriving Validity via (NoChar "\t" String)
 
 -- TODO need to apply tag-security restrictions
 newtype TagAddress = TagAddress Text
-  deriving newtype (Show, Eq, IsString, Pretty)
+  deriving newtype (Show, Eq, IsString, Pretty, Validity)
 
--- TODO May not contain tab. Also need to check special characters.
+-- TODO May not contain special characters.
 newtype TagFields = TagFields (Set FieldValue)
-  deriving newtype (Show, Eq)
+  deriving newtype (Show, Eq, Validity)
 
 instance Pretty TagFields where
   pretty (TagFields fieldSet) = prettyList . toList $ fieldSet
 
--- TODO ensure that Kind contains no colon
 data FieldValue
   = Kind TagKind
-  deriving stock (Show, Eq)
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving anyclass (Validity)
 
 instance Pretty FieldValue where
   pretty (Kind t) = pretty t
@@ -124,7 +137,8 @@ instance Pretty FieldValue where
   prettyList = foldMap $ (tab <>) . pretty
 
 newtype TagKind = TagKind Text
-  deriving newtype (Show, Eq, IsString, Pretty)
+  deriving newtype (Show, Eq, Ord, IsString, Pretty)
+  deriving Validity via (NoChar ":" Text)
 
 --------------------------------------------------
 -- * PrettyPrinting
@@ -132,3 +146,24 @@ newtype TagKind = TagKind Text
 
 tab :: Doc ann
 tab = "\t"
+
+--------------------------------------------------
+-- * Validity
+--------------------------------------------------
+
+charNotIn :: Char -> Text -> Bool
+charNotIn c = not . T.any (== c)
+
+charNotInS :: Char -> String -> Bool
+charNotInS c = not . L.any (== c)
+
+newtype NoChar (s :: Symbol) a = NoChar a
+
+instance Validity (NoChar "\t" Text) where
+  validate = declare "Contains no tab character" . charNotIn '\t' . coerce
+
+instance Validity (NoChar "\t" String) where
+  validate = declare "Contains no tab character" . charNotInS '\t' . coerce
+
+instance Validity (NoChar ":" Text) where
+  validate = declare "Contains no tab character" . charNotIn ':' . coerce
