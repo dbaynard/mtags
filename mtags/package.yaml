@@ -61,3 +61,14 @@ tests:
     dependencies:
     - mtags
     - hspec
+
+  mtags-doctest:
+    main:                test/doctest-driver.hs
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - mtags
+    - doctest
+    - doctest-driver-gen
