@@ -65,6 +65,7 @@
 {-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE TypeApplications           #-}
 {-# LANGUAGE TypeInType                 #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 module MTags
   ( module MTags
@@ -76,6 +77,7 @@ import           "prettyprinter" Data.Text.Prettyprint.Doc
 import           "validity" Data.Validity
 import           "validity-containers" Data.Validity.Set   ()
 import           "validity-text" Data.Validity.Text        ()
+import qualified "base" GHC.Exts                           as GHC (IsList)
 import           "base" GHC.TypeLits                       (Symbol)
 import           "rio" RIO
 import qualified "rio" RIO.List                            as L (any)
@@ -84,6 +86,21 @@ import qualified "rio" RIO.Text                            as T (any)
 --------------------------------------------------
 -- * Individual tags
 --------------------------------------------------
+
+-- $setup
+--
+-- >>> :set -XOverloadedStrings
+-- >>> :set -XOverloadedLists
+-- >>> import Data.Text.Prettyprint.Doc.Render.String
+-- >>> let renderPretty = Prelude.putStr . renderString . layoutCompact . pretty
+-- >>> :{
+-- let exampleMTag = MTag
+--       { tagName = "Analysis of proteins"
+--       , tagFile = "cry.md"
+--       , tagAddress = "/^## Analysis of proteins$/"
+--       , fields = [Kind "s", Line 197, Section "Methods"]
+--       }
+-- :}
 
 -- | A single line, corresponding to a single tag.
 data MTag = MTag
@@ -95,6 +112,8 @@ data MTag = MTag
   deriving stock (Show, Eq, Generic)
   deriving anyclass (Validity)
 
+-- | >>> renderPretty exampleMTag
+-- Analysis of proteins	cry.md	/^## Analysis of proteins$/;"	s	line:197	section:Methods
 instance Pretty MTag where
   pretty m = mconcat
     [ m ^. typed @TagName . to pretty
@@ -103,7 +122,7 @@ instance Pretty MTag where
     , tab
     , m ^. typed @TagAddress . to pretty
     , ";\""
-    , m ^. typed @TagAddress . to pretty
+    , m ^. typed @TagFields . to pretty
     ]
 
 newtype TagName = TagName Text
@@ -124,19 +143,23 @@ newtype TagAddress = TagAddress Text
 -- TODO May not contain special characters.
 newtype TagFields = TagFields (Set FieldValue)
   deriving stock (Generic)
-  deriving newtype (Show, Eq, Validity)
+  deriving newtype (Show, Eq, Validity, GHC.IsList)
 
 instance Pretty TagFields where
   pretty (TagFields fieldSet) = prettyList . toList $ fieldSet
 
 data FieldValue
   = Kind TagKind
+  | Line LineNo
+  | Section SectionName
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (Validity)
 
 instance Pretty FieldValue where
   pretty (Kind t) = pretty t
-  -- pretty (Tag t) = mconcat ["tag", colon, pretty t]
+
+  pretty (Line n)    = mconcat ["line", colon, pretty n]
+  pretty (Section n) = mconcat ["section", colon, pretty n]
 
   prettyList = foldMap $ (tab <>) . pretty
 
@@ -144,6 +167,16 @@ newtype TagKind = TagKind Text
   deriving stock (Generic)
   deriving newtype (Show, Eq, Ord, IsString, Pretty)
   deriving Validity via (NoChar ":" Text)
+
+newtype LineNo = LineNo Word
+  deriving stock (Generic)
+  deriving newtype (Show, Eq, Ord, Enum, Bounded, Num, Real, Integral, Pretty)
+  deriving anyclass (Validity)
+
+newtype SectionName = SectionName Text
+  deriving stock (Generic)
+  deriving newtype (Show, Eq, Ord, IsString, Pretty)
+  deriving Validity via (NoChar "\t" Text)
 
 --------------------------------------------------
 -- * PrettyPrinting

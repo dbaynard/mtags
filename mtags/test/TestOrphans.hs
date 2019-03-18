@@ -27,3 +27,9 @@ instance GenValid FieldValue
 
 instance GenUnchecked TagKind
 instance GenValid TagKind
+
+instance GenUnchecked LineNo
+instance GenValid LineNo
+
+instance GenUnchecked SectionName
+instance GenValid SectionName
