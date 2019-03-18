@@ -44,7 +44,7 @@
 --                         "\n" stands for a <NL>
 --                         "\\" stands for a single '\' character
 --
---                 There is one field that doesn't have a ':'.  This is the kind
+--                 There is one field that doesn't have a ":".  This is the kind
 --                 of the tag.  It is handled like it was preceded with "kind:".
 --                 See the documentation of ctags for the kinds it produces.
 --
