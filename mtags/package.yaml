@@ -33,6 +33,7 @@ library:
   exposed-modules:
   - MTags
   dependencies:
+  - generic-lens
   - prettyprinter
 
 executables:

@@ -52,17 +52,20 @@
 --                 (with an empty value).  It is used for a static tag.
 -- @
 
+{-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE DerivingVia                #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE PackageImports             #-}
 {-# LANGUAGE StrictData                 #-}
+{-# LANGUAGE TypeApplications           #-}
 
 module MTags
   ( module MTags
   ) where
 
+import           "generic-lens" Data.Generics.Product
 import           "prettyprinter" Data.Text.Prettyprint.Doc
 import           "rio" RIO
 
@@ -77,7 +80,18 @@ data MTag = MTag
   , tagAddress :: TagAddress -- ^ (Ex) command to locate the tag
   , fields     :: TagFields  -- ^ Optional fields
   }
-  deriving stock (Show, Eq)
+  deriving stock (Show, Eq, Generic)
+
+instance Pretty MTag where
+  pretty m = mconcat
+    [ m ^. typed @TagName . to pretty
+    , tab
+    , m ^. typed @TagFile . to pretty
+    , tab
+    , m ^. typed @TagAddress . to pretty
+    , ";\""
+    , m ^. typed @TagAddress . to pretty
+    ]
 
 -- TODO need to ensure this contains no tab character
 newtype TagName = TagName Text
