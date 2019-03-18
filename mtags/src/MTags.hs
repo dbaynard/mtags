@@ -79,21 +79,26 @@ data MTag = MTag
   }
   deriving stock (Show, Eq)
 
+-- TODO need to ensure this contains no tab character
 newtype TagName = TagName Text
   deriving newtype (Show, Eq, IsString, Pretty)
 
+-- TODO need to ensure this contains no tab character
 newtype TagFile = TagFile FilePath
   deriving newtype (Show, Eq, IsString, Pretty)
 
+-- TODO need to apply tag-security restrictions
 newtype TagAddress = TagAddress Text
   deriving newtype (Show, Eq, IsString, Pretty)
 
+-- TODO May not contain tab. Also need to check special characters.
 newtype TagFields = TagFields (Set FieldValue)
   deriving newtype (Show, Eq)
 
 instance Pretty TagFields where
   pretty (TagFields fieldSet) = prettyList . toList $ fieldSet
 
+-- TODO ensure that Kind contains no colon
 data FieldValue
   = Kind TagKind
   deriving stock (Show, Eq)
