@@ -55,6 +55,7 @@
 {-# LANGUAGE DerivingVia                #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE PackageImports             #-}
 {-# LANGUAGE StrictData                 #-}
 
@@ -62,6 +63,7 @@ module MTags
   ( module MTags
   ) where
 
+import           "prettyprinter" Data.Text.Prettyprint.Doc
 import           "rio" RIO
 
 --------------------------------------------------
@@ -78,20 +80,36 @@ data MTag = MTag
   deriving stock (Show, Eq)
 
 newtype TagName = TagName Text
-  deriving newtype (Show, Eq, IsString)
+  deriving newtype (Show, Eq, IsString, Pretty)
 
 newtype TagFile = TagFile FilePath
-  deriving newtype (Show, Eq, IsString)
+  deriving newtype (Show, Eq, IsString, Pretty)
 
 newtype TagAddress = TagAddress Text
-  deriving newtype (Show, Eq, IsString)
+  deriving newtype (Show, Eq, IsString, Pretty)
 
 newtype TagFields = TagFields (Set FieldValue)
   deriving newtype (Show, Eq)
+
+instance Pretty TagFields where
+  pretty (TagFields fieldSet) = prettyList . toList $ fieldSet
 
 data FieldValue
   = Kind TagKind
   deriving stock (Show, Eq)
 
+instance Pretty FieldValue where
+  pretty (Kind t) = pretty t
+  -- pretty (Tag t) = mconcat ["tag", colon, pretty t]
+
+  prettyList = foldMap $ (tab <>) . pretty
+
 newtype TagKind = TagKind Text
-  deriving newtype (Show, Eq, IsString)
+  deriving newtype (Show, Eq, IsString, Pretty)
+
+--------------------------------------------------
+-- * PrettyPrinting
+--------------------------------------------------
+
+tab :: Doc ann
+tab = "\t"
