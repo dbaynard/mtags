@@ -71,17 +71,18 @@ module MTags
   ( module MTags
   ) where
 
-import           "base" Data.Coerce                        (coerce)
+import           "base" Data.Coerce                                    (coerce)
 import           "generic-lens" Data.Generics.Product
 import           "prettyprinter" Data.Text.Prettyprint.Doc
+import           "prettyprinter" Data.Text.Prettyprint.Doc.Render.Text (renderLazy)
 import           "validity" Data.Validity
-import           "validity-containers" Data.Validity.Set   ()
-import           "validity-text" Data.Validity.Text        ()
-import qualified "base" GHC.Exts                           as GHC (IsList)
-import           "base" GHC.TypeLits                       (Symbol)
+import           "validity-containers" Data.Validity.Set               ()
+import           "validity-text" Data.Validity.Text                    ()
+import qualified "base" GHC.Exts                                       as GHC (IsList)
+import           "base" GHC.TypeLits                                   (Symbol)
 import           "rio" RIO
-import qualified "rio" RIO.List                            as L (any)
-import qualified "rio" RIO.Text                            as T (any)
+import qualified "rio" RIO.List                                        as L (any)
+import qualified "rio" RIO.Text                                        as T (any)
 
 -- $setup
 --
@@ -196,6 +197,9 @@ newtype SectionName = SectionName Text
 
 tab :: Doc ann
 tab = "\t"
+
+renderCompact :: Pretty a => a -> Utf8Builder
+renderCompact = display . renderLazy . layoutCompact . pretty
 
 --------------------------------------------------
 -- ** Validity
