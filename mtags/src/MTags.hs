@@ -174,7 +174,7 @@ mtagsFromHeading file h l t = MTag
       , t
       , "$/"
       ]
-  , fields     = [Kind "s", Line l, Section (SectionName t)]
+  , fields     = [Kind "s", Line l, Parent (SectionName t)]
   }
 
 --------------------------------------------------
@@ -184,7 +184,7 @@ mtagsFromHeading file h l t = MTag
 data FieldValue
   = Kind TagKind
   | Line LineNo
-  | Section SectionName
+  | Parent SectionName
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (Validity)
 
@@ -192,7 +192,7 @@ instance Pretty FieldValue where
   pretty (Kind t) = pretty t
 
   pretty (Line n)    = mconcat ["line", colon, pretty n]
-  pretty (Section n) = mconcat ["section", colon, pretty n]
+  pretty (Parent n) = mconcat ["section", colon, pretty n]
 
   prettyList = foldMap $ (tab <>) . pretty
 
