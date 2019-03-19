@@ -24,7 +24,7 @@ module MTags.Parser
   ( Commonmark
   , readCommonmark
   , HeadingTag
-  , tagsFromText
+  , tagsFromCmark
   , tagsFromNode
   , HeadingLevel
   , LineNo
@@ -37,8 +37,8 @@ import           "validity" Data.Validity
 import           "rio" RIO
 import           "rio" RIO.Seq                             (Seq)
 
-tagsFromText :: HeadingTag tag -> Commonmark -> Seq tag
-tagsFromText f = tagsFromNode f . commonmarkToNode [] . coerce
+tagsFromCmark :: HeadingTag tag -> Commonmark -> Seq tag
+tagsFromCmark f = tagsFromNode f . commonmarkToNode [] . coerce
 
 newtype Commonmark = Commonmark Text
   deriving newtype (Show, Eq, IsString)

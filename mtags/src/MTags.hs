@@ -84,6 +84,7 @@ import           "base" GHC.TypeLits                                   (Symbol)
 import           "this" MTags.Parser
 import           "rio" RIO
 import qualified "rio" RIO.List                                        as L (any)
+import           "rio" RIO.Seq                                         (Seq)
 import qualified "rio" RIO.Text                                        as T (any, pack)
 
 -- $setup
@@ -100,6 +101,17 @@ import qualified "rio" RIO.Text                                        as T (any
 --       , fields = [Kind "s", Line 197, Section "Methods"]
 --       }
 -- :}
+
+--------------------------------------------------
+-- * MTags files
+--------------------------------------------------
+
+--------------------------------------------------
+-- * Whole files
+--------------------------------------------------
+
+makeMTags :: TagFile -> Commonmark -> Seq MTag
+makeMTags file = tagsFromCmark (mtagsFromHeading file)
 
 --------------------------------------------------
 -- * Individual tags
