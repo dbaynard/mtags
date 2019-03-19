@@ -1,7 +1,6 @@
 {-# LANGUAGE DataKinds          #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE FlexibleInstances  #-}
-{-# LANGUAGE NamedFieldPuns     #-}
 {-# LANGUAGE OverloadedStrings  #-}
 {-# LANGUAGE PackageImports     #-}
 {-# LANGUAGE StandaloneDeriving #-}
@@ -13,13 +12,13 @@ import           MTags                              (ctags)
 import           "optparse-generic" Options.Generic
 
 data Options w = Options
-  { inputFile :: w ::: FilePath <?> "The input file to scan"
-  } deriving (Generic)
+  ( w ::: FilePath <?> "The input file to scan"
+  ) deriving (Generic)
 
 instance ParseRecord (Options Wrapped)
 deriving instance Show (Options Unwrapped)
 
 main :: IO ()
 main = do
-  Options{inputFile} <- unwrapRecord "ctags replacement for markdown"
+  Options inputFile <- unwrapRecord "ctags replacement for markdown"
   ctags inputFile
