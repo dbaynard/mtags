@@ -28,6 +28,10 @@ module MTags.Parser
   ( Commonmark
   , readCommonmark
   , Tree
+  , tree
+  , leaf
+  , branch
+  , appendChild
   , HeadingTag
   , tagsFromCmark
   , tagsFromNode
@@ -40,7 +44,7 @@ import           "base" Data.Coerce                        (coerce)
 import           "prettyprinter" Data.Text.Prettyprint.Doc
 import           "validity" Data.Validity
 import           "rio" RIO
-import           "rio" RIO.Seq                             (Seq, pattern (:|>), pattern Empty)
+import           "rio" RIO.Seq                             (pattern (:|>), pattern Empty, Seq)
 
 tagsFromCmark :: HeadingTag tag -> Commonmark -> Seq tag
 tagsFromCmark f = tagsFromNode f . commonmarkToNode [] . coerce
@@ -55,49 +59,53 @@ readCommonmark = fmap Commonmark . readFileUtf8
 -- ** Section tree
 --------------------------------------------------
 
+-- $setup
+--
+-- eg :: Tree Int
+-- eg = branch 0 [branch 1 [leaf 2], leaf 3, branch 4 [branch 5 [leaf 6, leaf 7]]]
+
 newtype Tree a = Tree (forall r . (a -> r) -> (a -> Seq (Tree a) -> r) -> r)
 
 tree :: (a -> r) -> (a -> Seq (Tree a) -> r) -> Tree a -> r
 tree l b (Tree t) = t l b
 
-viewTree :: forall a . Display a => Tree a -> Utf8Builder
-viewTree = tree l b
+leaf :: a -> Tree a
+leaf a = Tree $ \l _ -> l a
+
+branch :: a -> Seq (Tree a) -> Tree a
+branch a s = Tree $ \_ b -> b a s
+
+instance Show a => Show (Tree a) where
+  show = viewTree show
+
+-- | >>> display eg
+-- "0(1(2)34(5(67(8))))"
+instance Display a => Display (Tree a) where
+  display = viewTree display
+
+viewTree :: forall a str . (Monoid str, IsString str) => (a -> str) -> Tree a -> str
+viewTree disp = tree l b
   where
-    l :: a -> Utf8Builder
-    l = display
-    b :: a -> Seq (Tree a) -> Utf8Builder
+    l :: a -> str
+    l = disp
+    b :: a -> Seq (Tree a) -> str
     b a s =  mconcat
-      [ display a
+      [ disp a
       , "("
       , foldMap (tree l b) s
       , ")"
       ]
 
-leaf :: a -> Tree a
-leaf a = Tree $ \l _ -> l a
-
-branch :: a -> Seq (Tree a) -> Tree a
-branch a s = Tree $ \l b -> b a s
-
-eg :: Tree Int
-eg = branch 0 [branch 1 [leaf 2], leaf 3, branch 4 [branch 5 [leaf 6, leaf 7]]]
-
-appendChild :: forall a . Show a => a -> Tree a -> Tree a
+appendChild :: forall a . a -> Tree a -> Tree a
 appendChild c = tree l b
   where
     l :: a -> Tree a
-    l a =  branch a [leaf c]
+    l a = branch a [leaf c]
     b :: a -> Seq (Tree a) -> Tree a
     b a (s :|> t) = branch a (s :|> tree l b t)
     -- This should not occur, but it might!
     b a Empty = branch a [leaf c]
 
--- data Tree a
---   = Leaf
---   | Branch a (Seq (Tree a))
--- 
--- -- [1,2,3,3,4,3,4,5,2,3,3,2,3,4,1,2,3,2,3,4,5,2,4,5]
--- 
 -- treeFromSeq :: Seq a -> Tree a
 -- treeFromSeq getLevel = fix \(tree, se) (cur :<| s@(next :<| _)) = case comparing getLevel cur next of
 --   -- cur < next => cur branch, next child
