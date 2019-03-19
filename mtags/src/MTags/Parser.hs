@@ -74,6 +74,9 @@ data TreeDict a r = TreeDict
 
 newtype Tree a = Tree (forall r . r -> (a -> Seq r -> r) -> r)
 
+tree :: r -> (a -> Seq r -> r) -> Tree a -> r
+tree l b (Tree t) = t l b
+
 viewTree :: forall a . Display a => Tree a -> Utf8Builder
 viewTree = tree l b
   where
@@ -86,9 +89,6 @@ viewTree = tree l b
       , fold s
       , ")"
       ]
-
-tree :: r -> (a -> Seq r -> r) -> Tree a -> r
-tree l b (Tree t) = t l b
 
 leaf :: Tree a
 leaf = Tree $ \l _ -> l
@@ -117,6 +117,19 @@ unroll = tree l b
     l     = LeafF
     b :: a -> Seq (TreeF a (Tree a)) -> TreeF a (Tree a)
     b a s = BranchF a (roll <$> s)
+
+newtype TreeD a = TreeD (forall w . w -> (a -> Seq (Tree a) -> w) -> w)
+
+treeD :: w -> (a -> Seq (Tree a) -> w) -> TreeD a -> w
+treeD l b (TreeD t) = t l b
+
+decon :: Tree a -> TreeD a
+decon = tree l b
+  where
+    l :: TreeD a
+    l = TreeD $ \lD _ -> lD
+    b :: a -> Seq (TreeD a) -> TreeD a
+    b a s = TreeD $ \lD bD -> bD a (treeD leaf branch <$> s)
 
 -- addChild :: a -> Tree a -> Tree a
 -- addChild a t = Tree $ \_ b -> b a _
