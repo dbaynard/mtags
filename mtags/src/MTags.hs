@@ -170,6 +170,7 @@ mtagsFromHeading file h l t = MTag
   , tagAddress = TagAddress . mconcat $
       [ "/^"
       , T.pack . replicate (fromIntegral h) $ '#'
+      , " "
       , t
       , "$/"
       ]
