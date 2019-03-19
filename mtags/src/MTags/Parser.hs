@@ -39,7 +39,7 @@ import           "base" Data.Coerce                        (coerce)
 import           "prettyprinter" Data.Text.Prettyprint.Doc
 import           "validity" Data.Validity
 import           "rio" RIO
-import           "rio" RIO.Seq                             (Seq)
+import           "rio" RIO.Seq                             (Seq, pattern (:|>), pattern Empty)
 
 tagsFromCmark :: HeadingTag tag -> Commonmark -> Seq tag
 tagsFromCmark f = tagsFromNode f . commonmarkToNode [] . coerce
@@ -144,8 +144,15 @@ viewTreeD = treeD l b . decon
       , ")"
       ]
 
--- addChild :: a -> Tree a -> Tree a
--- addChild a t = Tree $ \_ b -> b a _
+appendChild :: forall a . a -> Tree a -> Tree a
+appendChild c = tree l b
+  where
+    l :: Tree a
+    l = leaf -- branch a [leaf]
+    b :: a -> Seq (Tree a) -> Tree a
+    b a (s :|> t) = branch a (s :|> appendChild c t)
+    b a Empty = branch a [branch c [leaf]]
+  -- Tree $ \l b -> b a (_ $ tree t)
 
 -- data Tree a
 --   = Leaf
