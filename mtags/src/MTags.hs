@@ -63,6 +63,7 @@
 {-# LANGUAGE OverloadedLists            #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE PackageImports             #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE TypeApplications           #-}
 {-# LANGUAGE TypeInType                 #-}
@@ -77,8 +78,8 @@ import           "generic-lens" Data.Generics.Product
 import           "prettyprinter" Data.Text.Prettyprint.Doc
 import           "prettyprinter" Data.Text.Prettyprint.Doc.Render.Text (renderLazy)
 import           "validity" Data.Validity
-import           "validity-containers" Data.Validity.Set               ()
 import           "validity-containers" Data.Validity.Sequence          ()
+import           "validity-containers" Data.Validity.Set               ()
 import           "validity-text" Data.Validity.Text                    ()
 import qualified "base" GHC.Exts                                       as GHC (IsList)
 import           "base" GHC.TypeLits                                   (Symbol)
@@ -86,7 +87,8 @@ import           "this" MTags.Parser
 import           "rio" RIO
 import qualified "rio" RIO.List                                        as L (any)
 import           "rio" RIO.Seq                                         (Seq)
-import qualified "rio" RIO.Text                                        as T (any, pack)
+import qualified "rio" RIO.Seq                                         as Seq (unstableSort)
+import qualified "rio" RIO.Text                                        as T (any, pack, toCaseFold)
 
 -- $setup
 --
@@ -116,6 +118,13 @@ newtype MTagsFile = MTagsFile (Seq MTag)
   deriving newtype (Show, Eq, GHC.IsList)
   deriving anyclass (Validity)
 
+instance Pretty MTagsFile where
+  pretty (MTagsFile ms) = vcat $
+    [ "!_TAG_FILE_FORMAT\t2"
+    , "!_TAG_FILE_SORTED\t1"
+    , "!_TAG_FILE_ENCODING\tutf-8"
+    ] <> foldMap (pure . pretty) (Seq.unstableSort ms)
+
 makeMTags :: TagFile -> Commonmark -> MTagsFile
 makeMTags file = MTagsFile . tagsFromCmark (mtagsFromHeading file)
 
@@ -132,6 +141,9 @@ data MTag = MTag
   }
   deriving stock (Show, Eq, Generic)
   deriving anyclass (Validity)
+
+instance Ord MTag where
+  compare = comparing tagName
 
 -- | >>> renderPretty exampleMTag
 -- Analysis of proteins cry.md  /^## Analysis of proteins$/;" s line:197  section:Methods
@@ -186,6 +198,7 @@ newtype TagName = TagName Text
   deriving stock (Generic)
   deriving newtype (Show, Eq, IsString, Pretty)
   deriving Validity via (NoChar "\t" Text)
+  deriving Ord via CaseFold
 
 newtype TagFile = TagFile FilePath
   deriving stock (Generic)
@@ -193,6 +206,7 @@ newtype TagFile = TagFile FilePath
   deriving Validity via (NoChar "\t" String)
 
 -- TODO need to apply tag-security restrictions
+-- TODO E.g. need to escape backslashes
 newtype TagAddress = TagAddress Text
   deriving stock (Generic)
   deriving newtype (Show, Eq, IsString, Pretty, Validity)
@@ -249,3 +263,19 @@ instance Validity (NoChar "\t" String) where
 
 instance Validity (NoChar ":" Text) where
   validate = declare "Contains no tab character" . charNotIn ':' . coerce
+
+--------------------------------------------------
+-- ** Deriving
+--------------------------------------------------
+
+newtype CaseFold = CaseFold Text
+  deriving Eq
+
+instance Ord CaseFold where
+  compare = comparing $ T.toCaseFold . coerce
+
+newtype Field typ a = Field a
+  deriving Eq
+
+instance (Eq a, Ord typ, HasType typ a) => Ord (Field typ a) where
+  compare = comparing $ view @a (typed @typ) . coerce
