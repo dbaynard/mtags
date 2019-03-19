@@ -55,9 +55,9 @@ readCommonmark = fmap Commonmark . readFileUtf8
 -- ** Section tree
 --------------------------------------------------
 
-newtype Tree a = Tree (forall r . (a -> r) -> (a -> Seq r -> r) -> r)
+newtype Tree a = Tree (forall r . (a -> r) -> (a -> Seq (Tree a) -> r) -> r)
 
-tree :: (a -> r) -> (a -> Seq r -> r) -> Tree a -> r
+tree :: (a -> r) -> (a -> Seq (Tree a) -> r) -> Tree a -> r
 tree l b (Tree t) = t l b
 
 viewTree :: forall a . Display a => Tree a -> Utf8Builder
@@ -65,11 +65,11 @@ viewTree = tree l b
   where
     l :: a -> Utf8Builder
     l = display
-    b :: a -> Seq Utf8Builder -> Utf8Builder
+    b :: a -> Seq (Tree a) -> Utf8Builder
     b a s =  mconcat
       [ display a
       , "("
-      , fold s
+      , foldMap (tree l b) s
       , ")"
       ]
 
@@ -77,44 +77,18 @@ leaf :: a -> Tree a
 leaf a = Tree $ \l _ -> l a
 
 branch :: a -> Seq (Tree a) -> Tree a
-branch a s = Tree $ \l b -> b a (tree l b <$> s)
+branch a s = Tree $ \l b -> b a s
 
 eg :: Tree Int
 eg = branch 0 [branch 1 [leaf 2], leaf 3, branch 4 [branch 5 [leaf 6, leaf 7]]]
 
-newtype TreeD a = TreeD (forall w . (a -> w) -> (a -> Seq (Tree a) -> w) -> w)
-
-treeD :: (a -> w) -> (a -> Seq (Tree a) -> w) -> TreeD a -> w
-treeD l b (TreeD t) = t l b
-
-decon :: Tree a -> TreeD a
-decon = tree l b
-  where
-    l :: a -> TreeD a
-    l a = TreeD $ \lD _ -> lD a
-    b :: a -> Seq (TreeD a) -> TreeD a
-    b a s = TreeD $ \lD bD -> bD a (treeD leaf branch <$> s)
-
-viewTreeD :: forall a . Display a => Tree a -> Utf8Builder
-viewTreeD = treeD l b . decon
-  where
-    l :: a -> Utf8Builder
-    l = display
-    b :: a -> Seq (Tree a) -> Utf8Builder
-    b a s =  mconcat
-      [ display a
-      , "("
-      , foldMap viewTreeD s
-      , ")"
-      ]
-
 appendChild :: forall a . Show a => a -> Tree a -> Tree a
-appendChild c = treeD l b . decon
+appendChild c = tree l b
   where
     l :: a -> Tree a
     l a =  branch a [leaf c]
     b :: a -> Seq (Tree a) -> Tree a
-    b a (s :|> (decon -> t)) = branch a (s :|> treeD l b t)
+    b a (s :|> t) = branch a (s :|> tree l b t)
     -- This should not occur, but it might!
     b a Empty = branch a [leaf c]
 
