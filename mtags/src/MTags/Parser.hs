@@ -21,6 +21,7 @@
 {-# LANGUAGE PatternSynonyms            #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeApplications           #-}
 {-# LANGUAGE ViewPatterns               #-}
 
 module MTags.Parser
@@ -54,16 +55,16 @@ readCommonmark = fmap Commonmark . readFileUtf8
 -- ** Section tree
 --------------------------------------------------
 
-newtype Tree a = Tree (forall r . r -> (a -> Seq r -> r) -> r)
+newtype Tree a = Tree (forall r . (a -> r) -> (a -> Seq r -> r) -> r)
 
-tree :: r -> (a -> Seq r -> r) -> Tree a -> r
+tree :: (a -> r) -> (a -> Seq r -> r) -> Tree a -> r
 tree l b (Tree t) = t l b
 
 viewTree :: forall a . Display a => Tree a -> Utf8Builder
 viewTree = tree l b
   where
-    l :: Utf8Builder
-    l = ""
+    l :: a -> Utf8Builder
+    l = display
     b :: a -> Seq Utf8Builder -> Utf8Builder
     b a s =  mconcat
       [ display a
@@ -72,33 +73,33 @@ viewTree = tree l b
       , ")"
       ]
 
-leaf :: Tree a
-leaf = Tree $ \l _ -> l
+leaf :: a -> Tree a
+leaf a = Tree $ \l _ -> l a
 
 branch :: a -> Seq (Tree a) -> Tree a
 branch a s = Tree $ \l b -> b a (tree l b <$> s)
 
 eg :: Tree Int
-eg = branch 0 [branch 1 [leaf], branch 2 [branch 3 []]]
+eg = branch 0 [branch 1 [leaf 2], leaf 3, branch 4 [branch 5 [leaf 6, leaf 7]]]
 
-newtype TreeD a = TreeD (forall w . w -> (a -> Seq (Tree a) -> w) -> w)
+newtype TreeD a = TreeD (forall w . (a -> w) -> (a -> Seq (Tree a) -> w) -> w)
 
-treeD :: w -> (a -> Seq (Tree a) -> w) -> TreeD a -> w
+treeD :: (a -> w) -> (a -> Seq (Tree a) -> w) -> TreeD a -> w
 treeD l b (TreeD t) = t l b
 
 decon :: Tree a -> TreeD a
 decon = tree l b
   where
-    l :: TreeD a
-    l = TreeD $ \lD _ -> lD
+    l :: a -> TreeD a
+    l a = TreeD $ \lD _ -> lD a
     b :: a -> Seq (TreeD a) -> TreeD a
     b a s = TreeD $ \lD bD -> bD a (treeD leaf branch <$> s)
 
 viewTreeD :: forall a . Display a => Tree a -> Utf8Builder
 viewTreeD = treeD l b . decon
   where
-    l :: Utf8Builder
-    l = ""
+    l :: a -> Utf8Builder
+    l = display
     b :: a -> Seq (Tree a) -> Utf8Builder
     b a s =  mconcat
       [ display a
@@ -107,15 +108,15 @@ viewTreeD = treeD l b . decon
       , ")"
       ]
 
-appendChild :: forall a . a -> Tree a -> Tree a
-appendChild c = tree l b
+appendChild :: forall a . Show a => a -> Tree a -> Tree a
+appendChild c = treeD l b . decon
   where
-    l :: Tree a
-    l = leaf -- branch a [leaf]
+    l :: a -> Tree a
+    l a =  branch a [leaf c]
     b :: a -> Seq (Tree a) -> Tree a
-    b a (s :|> t) = branch a (s :|> appendChild c t)
-    b a Empty = branch a [branch c [leaf]]
-  -- Tree $ \l b -> b a (_ $ tree t)
+    b a (s :|> (decon -> t)) = branch a (s :|> treeD l b t)
+    -- This should not occur, but it might!
+    b a Empty = branch a [leaf c]
 
 -- data Tree a
 --   = Leaf
