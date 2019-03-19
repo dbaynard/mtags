@@ -32,7 +32,9 @@ library:
   source-dirs: src
   exposed-modules:
   - MTags
+  - MTags.Parser
   dependencies:
+  - cmark
   - generic-lens
   - prettyprinter
   - validity
