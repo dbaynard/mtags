@@ -54,24 +54,6 @@ readCommonmark = fmap Commonmark . readFileUtf8
 -- ** Section tree
 --------------------------------------------------
 
-data Tree' a
-  = Leaf'
-  | Branch' a (Seq (Tree' a))
-
-viewTree' :: Display a => Tree' a -> Utf8Builder
-viewTree' (Leaf') = ""
-viewTree' (Branch' a s) = mconcat
-  [ display a
-  , "("
-  , foldMap viewTree' s
-  , ")"
-  ]
-
-data TreeDict a r = TreeDict
-  { leaf' :: r
-  , branch' :: a -> Seq r -> r
-  }
-
 newtype Tree a = Tree (forall r . r -> (a -> Seq r -> r) -> r)
 
 tree :: r -> (a -> Seq r -> r) -> Tree a -> r
@@ -96,27 +78,8 @@ leaf = Tree $ \l _ -> l
 branch :: a -> Seq (Tree a) -> Tree a
 branch a s = Tree $ \l b -> b a (tree l b <$> s)
 
-eg1 :: Tree' Int
-eg1 = Branch' 0 [Branch' 1 [Leaf'], Branch' 2 [Branch' 3 []]]
-
-eg2 :: Tree Int
-eg2 = branch 0 [branch 1 [leaf], branch 2 [branch 3 []]]
-
-data TreeF a r
-  = LeafF
-  | BranchF a (Seq r)
-
-roll :: TreeF a (Tree a) -> Tree a
-roll LeafF         = leaf
-roll (BranchF a s) = branch a s
-
-unroll :: forall a . Tree a -> TreeF a (Tree a)
-unroll = tree l b
-  where
-    l :: TreeF a (Tree a)
-    l     = LeafF
-    b :: a -> Seq (TreeF a (Tree a)) -> TreeF a (Tree a)
-    b a s = BranchF a (roll <$> s)
+eg :: Tree Int
+eg = branch 0 [branch 1 [leaf], branch 2 [branch 3 []]]
 
 newtype TreeD a = TreeD (forall w . w -> (a -> Seq (Tree a) -> w) -> w)
 
