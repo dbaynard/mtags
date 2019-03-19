@@ -131,6 +131,19 @@ decon = tree l b
     b :: a -> Seq (TreeD a) -> TreeD a
     b a s = TreeD $ \lD bD -> bD a (treeD leaf branch <$> s)
 
+viewTreeD :: forall a . Display a => Tree a -> Utf8Builder
+viewTreeD = treeD l b . decon
+  where
+    l :: Utf8Builder
+    l = ""
+    b :: a -> Seq (Tree a) -> Utf8Builder
+    b a s =  mconcat
+      [ display a
+      , "("
+      , foldMap viewTreeD s
+      , ")"
+      ]
+
 -- addChild :: a -> Tree a -> Tree a
 -- addChild a t = Tree $ \_ b -> b a _
 
