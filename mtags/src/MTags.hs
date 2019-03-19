@@ -76,7 +76,7 @@ module MTags
 import           "base" Data.Coerce                                    (coerce)
 import           "generic-lens" Data.Generics.Product
 import           "prettyprinter" Data.Text.Prettyprint.Doc
-import           "prettyprinter" Data.Text.Prettyprint.Doc.Render.Text (renderLazy)
+import           "prettyprinter" Data.Text.Prettyprint.Doc.Render.Text (renderLazy, renderIO)
 import           "validity" Data.Validity
 import           "validity-containers" Data.Validity.Sequence          ()
 import           "validity-containers" Data.Validity.Set               ()
@@ -108,6 +108,10 @@ import qualified "rio" RIO.Text                                        as T (any
 --------------------------------------------------
 -- * MTags files
 --------------------------------------------------
+
+-- TODO no tabs in filename
+ctags :: FilePath -> IO ()
+ctags file = putCompact . makeMTags (TagFile file) <=< readCommonmark $ file
 
 --------------------------------------------------
 -- * Whole files
@@ -242,6 +246,9 @@ tab = "\t"
 
 renderCompact :: Pretty a => a -> Utf8Builder
 renderCompact = display . renderLazy . layoutCompact . pretty
+
+putCompact :: Pretty a => a -> IO ()
+putCompact = renderIO stdout . layoutCompact . pretty
 
 --------------------------------------------------
 -- ** Validity
