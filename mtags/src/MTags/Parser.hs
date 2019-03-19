@@ -96,6 +96,34 @@ viewTree disp = tree l b
       , ")"
       ]
 
+latestLeaf :: forall a . Tree a -> a
+latestLeaf = tree id b
+  where
+    b :: a -> Seq (Tree a) -> a
+    b _ (_ :|> t) = tree id b t
+    -- This should not occur, but it might!
+    b a Empty = a
+
+latestParent :: forall a . Tree a -> Maybe a
+latestParent = tree l b
+  where
+    l :: a -> Maybe a
+    l = const Nothing
+    b :: a -> Seq (Tree a) -> Maybe a
+    b a (s :|> t) = tree pure b t
+    -- This should not occur, but it might!
+    b _ Empty = Nothing
+
+stripLatestChildren :: forall a . Tree a -> Maybe (Tree a)
+stripLatestChildren = tree l b
+  where
+    l :: a -> Maybe (Tree a)
+    l = const Nothing
+    b :: a -> Seq (Tree a) -> Maybe (Tree a)
+    b a (s :|> t) = tree (const . Just . leaf $ a) b t
+    -- This should not occur, but it might!
+    b _ Empty = Nothing
+
 appendChild :: forall a . a -> Tree a -> Tree a
 appendChild c = tree l b
   where
