@@ -102,6 +102,22 @@ eg1 = Branch' 0 [Branch' 1 [Leaf'], Branch' 2 [Branch' 3 []]]
 eg2 :: Tree Int
 eg2 = branch 0 [branch 1 [leaf], branch 2 [branch 3 []]]
 
+data TreeF a r
+  = LeafF
+  | BranchF a (Seq r)
+
+roll :: TreeF a (Tree a) -> Tree a
+roll LeafF         = leaf
+roll (BranchF a s) = branch a s
+
+unroll :: forall a . Tree a -> TreeF a (Tree a)
+unroll = tree l b
+  where
+    l :: TreeF a (Tree a)
+    l     = LeafF
+    b :: a -> Seq (TreeF a (Tree a)) -> TreeF a (Tree a)
+    b a s = BranchF a (roll <$> s)
+
 -- addChild :: a -> Tree a -> Tree a
 -- addChild a t = Tree $ \_ b -> b a _
 
