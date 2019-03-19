@@ -78,6 +78,7 @@ import           "prettyprinter" Data.Text.Prettyprint.Doc
 import           "prettyprinter" Data.Text.Prettyprint.Doc.Render.Text (renderLazy)
 import           "validity" Data.Validity
 import           "validity-containers" Data.Validity.Set               ()
+import           "validity-containers" Data.Validity.Sequence          ()
 import           "validity-text" Data.Validity.Text                    ()
 import qualified "base" GHC.Exts                                       as GHC (IsList)
 import           "base" GHC.TypeLits                                   (Symbol)
@@ -110,8 +111,13 @@ import qualified "rio" RIO.Text                                        as T (any
 -- * Whole files
 --------------------------------------------------
 
-makeMTags :: TagFile -> Commonmark -> Seq MTag
-makeMTags file = tagsFromCmark (mtagsFromHeading file)
+newtype MTagsFile = MTagsFile (Seq MTag)
+  deriving stock (Generic)
+  deriving newtype (Show, Eq, GHC.IsList)
+  deriving anyclass (Validity)
+
+makeMTags :: TagFile -> Commonmark -> MTagsFile
+makeMTags file = MTagsFile . tagsFromCmark (mtagsFromHeading file)
 
 --------------------------------------------------
 -- * Individual tags
