@@ -76,7 +76,7 @@ module MTags
 import           "base" Data.Coerce                                    (coerce)
 import           "generic-lens" Data.Generics.Product
 import           "prettyprinter" Data.Text.Prettyprint.Doc
-import           "prettyprinter" Data.Text.Prettyprint.Doc.Render.Text (renderLazy, renderIO)
+import           "prettyprinter" Data.Text.Prettyprint.Doc.Render.Text (renderIO, renderLazy)
 import           "validity" Data.Validity
 import           "validity-containers" Data.Validity.Sequence          ()
 import           "validity-containers" Data.Validity.Set               ()
@@ -85,6 +85,7 @@ import qualified "base" GHC.Exts                                       as GHC (I
 import           "base" GHC.TypeLits                                   (Symbol)
 import           "this" MTags.Parser
 import           "rio" RIO
+import           "rio" RIO.FilePath                                    (takeFileName)
 import qualified "rio" RIO.List                                        as L (any)
 import           "rio" RIO.Seq                                         (Seq)
 import qualified "rio" RIO.Seq                                         as Seq (unstableSort)
@@ -111,7 +112,7 @@ import qualified "rio" RIO.Text                                        as T (any
 
 -- TODO no tabs in filename
 ctags :: FilePath -> IO ()
-ctags file = putCompact . makeMTags (TagFile file) <=< readCommonmark $ file
+ctags file = putCompact . makeMTags (TagFile $ takeFileName file) <=< readCommonmark $ file
 
 --------------------------------------------------
 -- * Whole files
