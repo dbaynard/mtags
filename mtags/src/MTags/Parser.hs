@@ -13,16 +13,20 @@
 {-# LANGUAGE DerivingVia                #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE NamedFieldPuns             #-}
 {-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE OverloadedLists            #-}
+{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE PackageImports             #-}
 {-# LANGUAGE PatternSynonyms            #-}
+{-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE ViewPatterns               #-}
-{-# LANGUAGE NamedFieldPuns #-}
 
 module MTags.Parser
   ( Commonmark
   , readCommonmark
+  , Tree
   , HeadingTag
   , tagsFromCmark
   , tagsFromNode
@@ -45,6 +49,76 @@ newtype Commonmark = Commonmark Text
 
 readCommonmark :: FilePath -> IO Commonmark
 readCommonmark = fmap Commonmark . readFileUtf8
+
+--------------------------------------------------
+-- ** Section tree
+--------------------------------------------------
+
+data Tree' a
+  = Leaf'
+  | Branch' a (Seq (Tree' a))
+
+viewTree' :: Display a => Tree' a -> Utf8Builder
+viewTree' (Leaf') = ""
+viewTree' (Branch' a s) = mconcat
+  [ display a
+  , "("
+  , foldMap viewTree' s
+  , ")"
+  ]
+
+data TreeDict a r = TreeDict
+  { leaf' :: r
+  , branch' :: a -> Seq r -> r
+  }
+
+newtype Tree a = Tree (forall r . r -> (a -> Seq r -> r) -> r)
+
+viewTree :: forall a . Display a => Tree a -> Utf8Builder
+viewTree = tree l b
+  where
+    l :: Utf8Builder
+    l = ""
+    b :: a -> Seq Utf8Builder -> Utf8Builder
+    b a s =  mconcat
+      [ display a
+      , "("
+      , fold s
+      , ")"
+      ]
+
+tree :: r -> (a -> Seq r -> r) -> Tree a -> r
+tree l b (Tree t) = t l b
+
+leaf :: Tree a
+leaf = Tree $ \l _ -> l
+
+branch :: a -> Seq (Tree a) -> Tree a
+branch a s = Tree $ \l b -> b a (tree l b <$> s)
+
+eg1 :: Tree' Int
+eg1 = Branch' 0 [Branch' 1 [Leaf'], Branch' 2 [Branch' 3 []]]
+
+eg2 :: Tree Int
+eg2 = branch 0 [branch 1 [leaf], branch 2 [branch 3 []]]
+
+-- addChild :: a -> Tree a -> Tree a
+-- addChild a t = Tree $ \_ b -> b a _
+
+-- data Tree a
+--   = Leaf
+--   | Branch a (Seq (Tree a))
+-- 
+-- -- [1,2,3,3,4,3,4,5,2,3,3,2,3,4,1,2,3,2,3,4,5,2,4,5]
+-- 
+-- treeFromSeq :: Seq a -> Tree a
+-- treeFromSeq getLevel = fix \(tree, se) (cur :<| s@(next :<| _)) = case comparing getLevel cur next of
+--   -- cur < next => cur branch, next child
+--   LT -> Branch cur $ tree s
+--   -- cur == next => cur leaf, next sibling
+--   EQ -> se (Leaf a) s
+--   -- cur > next => cur leaf, next depends
+--   GT -> Leaf cur
 
 --------------------------------------------------
 -- * Filtering nodes
