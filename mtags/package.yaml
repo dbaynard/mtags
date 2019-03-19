@@ -42,7 +42,7 @@ library:
   - validity-text
 
 executables:
-  mtags-exe:
+  mtags:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
