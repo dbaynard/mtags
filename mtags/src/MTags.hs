@@ -60,6 +60,7 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE OverloadedLists            #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE PackageImports             #-}
 {-# LANGUAGE StrictData                 #-}
@@ -80,9 +81,11 @@ import           "validity-containers" Data.Validity.Set               ()
 import           "validity-text" Data.Validity.Text                    ()
 import qualified "base" GHC.Exts                                       as GHC (IsList)
 import           "base" GHC.TypeLits                                   (Symbol)
+import           "this" MTags.Parser
 import           "rio" RIO
 import qualified "rio" RIO.List                                        as L (any)
-import qualified "rio" RIO.Text                                        as T (any)
+import           "rio" RIO.Seq                                         (Seq)
+import qualified "rio" RIO.Text                                        as T (any, pack)
 
 -- $setup
 --
@@ -98,6 +101,17 @@ import qualified "rio" RIO.Text                                        as T (any
 --       , fields = [Kind "s", Line 197, Section "Methods"]
 --       }
 -- :}
+
+--------------------------------------------------
+-- * MTags files
+--------------------------------------------------
+
+--------------------------------------------------
+-- * Whole files
+--------------------------------------------------
+
+makeMTags :: TagFile -> Commonmark -> Seq MTag
+makeMTags file = tagsFromCmark (mtagsFromHeading file)
 
 --------------------------------------------------
 -- * Individual tags
@@ -125,6 +139,19 @@ instance Pretty MTag where
     , ";\""
     , m ^. typed @TagFields . to pretty
     ]
+
+mtagsFromHeading :: TagFile -> HeadingTag MTag
+mtagsFromHeading file h l t = MTag
+  { tagName    = TagName t
+  , tagFile    = file
+  , tagAddress = TagAddress . mconcat $
+      [ "/^"
+      , T.pack . replicate (fromIntegral h) $ '#'
+      , t
+      , "$/"
+      ]
+  , fields     = [Kind "s", Line l, Section (SectionName t)]
+  }
 
 --------------------------------------------------
 -- ** Possible field values
@@ -176,11 +203,6 @@ newtype TagKind = TagKind Text
   deriving stock (Generic)
   deriving newtype (Show, Eq, Ord, IsString, Pretty)
   deriving Validity via (NoChar ":" Text)
-
-newtype LineNo = LineNo Word
-  deriving stock (Generic)
-  deriving newtype (Show, Eq, Ord, Enum, Bounded, Num, Real, Integral, Pretty)
-  deriving anyclass (Validity)
 
 newtype SectionName = SectionName Text
   deriving stock (Generic)
