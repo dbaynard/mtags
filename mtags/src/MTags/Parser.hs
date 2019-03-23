@@ -19,7 +19,6 @@
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE PackageImports             #-}
 {-# LANGUAGE PatternSynonyms            #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE ViewPatterns               #-}
 
 module MTags.Parser
@@ -56,18 +55,14 @@ readCommonmark = fmap Commonmark . readFileUtf8
 
 type HeadingTag tag = HeadingLevel -> LineNo -> Text -> tag
 
-tagsFromNode :: forall tag . HeadingTag tag -> Node -> Seq tag
-tagsFromNode f = fst . go []
-  where
-    go :: Seq Text -> Node -> (Seq tag, Seq Text)
-    go stack = \case
-      -- \go stack -> \case
-      (Document ns)   -> foldM go [] ns
-      -- This case shouldn't happen
-      (Heading 0 p t) -> ([f 1 p t], [t])
-      (Heading n p t) -> let nstack = Seq.take (fromIntegral n - 1) stack :|> t in
-        ([f n p . T.intercalate "|" . toList $ nstack], nstack)
-      _               -> ([], stack)
+tagsFromNode :: HeadingTag tag -> Node -> Seq tag
+tagsFromNode f = (fst .) . ($ []) . fix $ \go stack -> \case
+  (Document ns)   -> foldM go [] ns
+  -- This case shouldn't happen
+  (Heading 0 p t) -> ([f 1 p t], [t])
+  (Heading n p t) -> let nstack = Seq.take (fromIntegral n - 1) stack :|> t in
+    ([f n p . T.intercalate "|" . toList $ nstack], nstack)
+  _               -> ([], stack)
 
 pattern Document :: [Node] -> Node
 pattern Document ns <- Node _ DOCUMENT ns
