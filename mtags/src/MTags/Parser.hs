@@ -40,14 +40,16 @@ module MTags.Parser
   ) where
 
 import           "cmark" CMark
-import           "base" Data.Coerce                        (coerce)
+-- import           "base" Data.Coerce                        (coerce)
 import           "prettyprinter" Data.Text.Prettyprint.Doc
 import           "validity" Data.Validity
 import           "rio" RIO
 import           "rio" RIO.Seq                             (pattern (:|>), pattern Empty, Seq)
 
+-- tagsFromCmark :: HeadingTag tag -> Commonmark -> Tree tag
+-- tagsFromCmark f = tagsFromNode f . commonmarkToNode [] . coerce
 tagsFromCmark :: HeadingTag tag -> Commonmark -> Seq tag
-tagsFromCmark f = tagsFromNode f . commonmarkToNode [] . coerce
+tagsFromCmark = undefined
 
 newtype Commonmark = Commonmark Text
   deriving newtype (Show, Eq, IsString)
@@ -64,6 +66,7 @@ readCommonmark = fmap Commonmark . readFileUtf8
 -- eg :: Tree Int
 -- eg = branch 0 [branch 1 [leaf 2], leaf 3, branch 4 [branch 5 [leaf 6, leaf 7]]]
 
+-- TODO use NESeq
 newtype Tree a = Tree (forall r . (a -> r) -> (a -> Seq (Tree a) -> r) -> r)
 
 tree :: (a -> r) -> (a -> Seq (Tree a) -> r) -> Tree a -> r
@@ -149,14 +152,29 @@ appendChild c = tree l b
 
 type HeadingTag tag = HeadingLevel -> LineNo -> Text -> tag
 
-tagsFromNode :: HeadingTag tag -> Node -> Seq tag
-tagsFromNode f = fix $ \go -> \case
-  (Document ns)   -> foldMap go ns
-  (Heading n p t) -> [f n p t]
-  _               -> []
+-- tagsFromNode :: HeadingTag tag -> Node -> Tree tag
+-- go :: Node -> Tree tag -> Tree tag
+-- tagsFromNode f = \go nd tr -> case nd of
+  -- (Document ns)   -> foldr go leaf ns
+tagsFromNode :: HeadingTag tag -> Node -> Tree tag -> Tree tag
+tagsFromNode f = \nd tr -> case nd of
+  (Heading 1 l t) -> f 1 l t `appendChild` tr
+  (Heading n l t) ->
+    let tag = f n l t
+        mup = stripLatestChildren tr
+        lst = latestLeaf <$> mup
+    in case n - lst of
+      0 -> 
+      x | x > 0 = 
+      x | x < 0 = 
+--  (Heading n l t) -> let r = f n l t in case n `compare` 0 of
+--    LT -> r
+--    EQ -> r
+--    GT -> r
+  _ -> tr
 
-pattern Document :: [Node] -> Node
-pattern Document ns <- Node _ DOCUMENT ns
+-- pattern Document :: [Node] -> Node
+-- pattern Document ns <- Node _ DOCUMENT ns
 
 pattern Heading :: HeadingTag Node
 pattern Heading n l t <- Node
