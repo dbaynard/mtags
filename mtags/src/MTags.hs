@@ -174,7 +174,7 @@ mtagFromNodes file mh l (t :| ts) = MTag
           T.pack . replicate (fromIntegral h) $ '#'
       , " "
       , t
-      , "[} ]" `onJust` mh $ \_ -> "$/"
+      , "/" `onJust` mh $ \_ -> "$/"
       ]
   , fields     = mconcat
       [ [ Kind $ "i" `onJust` mh $ \_ -> "s" ]
