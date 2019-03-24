@@ -197,7 +197,7 @@ addressFromElement t = TagAddress . mconcat . f
 
     f Figure =
       [ "/"
-      , "{#fig:"
+      , "\\%({#\\|=\"\\)fig:"
       , t
       , "/"
       ]

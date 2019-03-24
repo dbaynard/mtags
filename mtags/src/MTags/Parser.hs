@@ -103,13 +103,17 @@ pattern HeadingN n l t <- Node
   [Node Nothing (TEXT t) []]
 
 identOnly :: Text -> Text
-identOnly = T.takeWhile (\x -> x /= ' ' && x /= '}')
+identOnly = T.takeWhile (\x -> x /= ' ' && x /= '}' && x /= '\"')
+
+stripFigDiv :: Text -> Maybe Text
+stripFigDiv t = identOnly <$> do
+  T.stripPrefix "::: {#fig:" t <|> T.stripPrefix "<div id=\"fig:" t
 
 pattern FigureDivN :: LineNo -> Text -> Node
 pattern FigureDivN l t <- Node
   (Just PosInfo{startLine = fromIntegral -> l})
   PARAGRAPH
-  (Node Nothing (TEXT (fmap identOnly . T.stripPrefix "::: {#fig:" -> Just t)) [] : _)
+  (Node Nothing (TEXT (stripFigDiv -> Just t)) [] : _)
 
 pattern FigureN :: LineNo -> Text -> Node
 pattern FigureN l t <- Node
