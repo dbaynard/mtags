@@ -75,6 +75,7 @@ module MTags
 
 import           "base" Data.Coerce                                    (coerce)
 import           "generic-lens" Data.Generics.Product
+import           "base" Data.List.NonEmpty                             (NonEmpty (..))
 import           "prettyprinter" Data.Text.Prettyprint.Doc
 import           "prettyprinter" Data.Text.Prettyprint.Doc.Render.Text (renderIO, renderLazy)
 import           "validity" Data.Validity
@@ -164,7 +165,7 @@ instance Pretty MTag where
     ]
 
 mtagsFromHeading :: TagFile -> HeadingTag MTag
-mtagsFromHeading file h l t = MTag
+mtagsFromHeading file h l (t :| ts) = MTag
   { tagName    = TagName t
   , tagFile    = file
   , tagAddress = TagAddress . mconcat $
@@ -174,7 +175,12 @@ mtagsFromHeading file h l t = MTag
       , t
       , "$/"
       ]
-  , fields     = [Kind "s", Line l, Parent (SectionName t)]
+  , fields     = mconcat
+      [ [Kind "s" , Line l]
+      , case reverse ts of
+        []     -> []
+        (n:ns) -> [Parent . ParentNames . fmap TagName $ n :| ns]
+      ]
   }
 
 --------------------------------------------------
@@ -184,7 +190,7 @@ mtagsFromHeading file h l t = MTag
 data FieldValue
   = Kind TagKind
   | Line LineNo
-  | Parent SectionName
+  | Parent ParentNames
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (Validity)
 
@@ -220,7 +226,7 @@ newtype TagAddress = TagAddress Text
 -- TODO May not contain special characters.
 newtype TagFields = TagFields (Set FieldValue)
   deriving stock (Generic)
-  deriving newtype (Show, Eq, Validity, GHC.IsList)
+  deriving newtype (Show, Eq, Validity, GHC.IsList, Semigroup, Monoid)
 
 instance Pretty TagFields where
   pretty (TagFields fieldSet) = prettyList . toList $ fieldSet
@@ -230,10 +236,12 @@ newtype TagKind = TagKind Text
   deriving newtype (Show, Eq, Ord, IsString, Pretty)
   deriving Validity via (NoChar ":" Text)
 
-newtype SectionName = SectionName Text
+newtype ParentNames = ParentNames (NonEmpty TagName)
   deriving stock (Generic)
-  deriving newtype (Show, Eq, Ord, IsString, Pretty)
-  deriving Validity via (NoChar "\t" Text)
+  deriving newtype (Show, Eq, Ord, Validity)
+
+instance Pretty ParentNames where
+  pretty (ParentNames names) = intercalate "|" . fmap pretty . toList $ names
 
 --------------------------------------------------
 -- * Helpers
@@ -245,6 +253,9 @@ newtype SectionName = SectionName Text
 
 tab :: Doc ann
 tab = "\t"
+
+intercalate :: Doc ann -> [Doc ann] -> Doc ann
+intercalate d = concatWith $ \a b -> a <> d <> b
 
 renderCompact :: Pretty a => a -> Utf8Builder
 renderCompact = display . renderLazy . layoutCompact . pretty
