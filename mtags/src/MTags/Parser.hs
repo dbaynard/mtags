@@ -25,6 +25,7 @@
 module MTags.Parser
   ( Commonmark
   , readCommonmark
+  , Element(..)
   , ConvertTag
   , tagsFromCmark
   , tagsFromNode
@@ -56,7 +57,23 @@ readCommonmark = fmap Commonmark . readFileUtf8
 -- * Filtering nodes
 --------------------------------------------------
 
-type ConvertTag tag = Maybe HeadingLevel -> LineNo -> NonEmpty Text -> tag
+-- | In vim, set up the Tagbar @kinds@ array as follows:
+--
+-- @
+-- \\ \'kinds\' : [
+--     \\ \'s:sections\',
+--     \\ \'i:images\',
+--     \\ \'t:tables\'
+-- \\ ],
+-- @
+data Element
+  = Heading HeadingLevel
+  | Figure
+  | Table
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving anyclass (Validity)
+
+type ConvertTag tag = Element -> LineNo -> NonEmpty Text -> tag
 
 -- TODO Non empty Seq!
 tagsFromNode :: forall tag . ConvertTag tag -> Node -> Seq tag
@@ -64,23 +81,23 @@ tagsFromNode f = fst . g []
   where
     g :: Seq Text -> Node -> (Seq tag, Seq Text)
     g = fix $ \go stack -> \case
-      (Document ns)    -> foldM go [] ns
+      (DocumentN ns)    -> foldM go [] ns
       -- This case shouldn't happen
-      (Heading 0 l t) -> ([f (Just 1) l $ [t]], [t])
-      (Heading n l t) -> let nstack = Seq.take (fromIntegral n - 1) stack :|> t in
-        ([f (Just n) l . report $ nstack], nstack)
-      (FigureDiv l t)  -> ([f Nothing l . report $ stack :|> t], stack)
-      (Figure    l t)  -> ([f Nothing l . report $ stack :|> t], stack)
-      (Table     l t)  -> ([f Nothing l . report $ stack :|> t], stack)
-      _                -> ([], stack)
+      (HeadingN 0 l t) -> ([f (Heading 1) l $ [t]], [t])
+      (HeadingN n l t) -> let nstack = Seq.take (fromIntegral n - 1) stack :|> t in
+        ([f (Heading n) l . report $ nstack], nstack)
+      (FigureDivN l t)  -> ([f Figure l . report $ stack :|> t], stack)
+      (FigureN    l t)  -> ([f Figure l . report $ stack :|> t], stack)
+      (TableN     l t)  -> ([f Table l . report $ stack :|> t], stack)
+      _                 -> ([], stack)
     report :: Seq Text -> NonEmpty Text
     report = NE.fromList . reverse . toList
 
-pattern Document :: [Node] -> Node
-pattern Document ns <- Node _ DOCUMENT ns
+pattern DocumentN :: [Node] -> Node
+pattern DocumentN ns <- Node _ DOCUMENT ns
 
-pattern Heading :: HeadingLevel -> LineNo -> Text -> Node
-pattern Heading n l t <- Node
+pattern HeadingN :: HeadingLevel -> LineNo -> Text -> Node
+pattern HeadingN n l t <- Node
   (Just PosInfo{startLine = fromIntegral -> l})
   (HEADING (fromIntegral -> n))
   [Node Nothing (TEXT t) []]
@@ -88,22 +105,22 @@ pattern Heading n l t <- Node
 identOnly :: Text -> Text
 identOnly = T.takeWhile (\x -> x /= ' ' && x /= '}')
 
-pattern FigureDiv :: LineNo -> Text -> Node
-pattern FigureDiv l t <- Node
+pattern FigureDivN :: LineNo -> Text -> Node
+pattern FigureDivN l t <- Node
   (Just PosInfo{startLine = fromIntegral -> l})
   PARAGRAPH
   (Node Nothing (TEXT (fmap identOnly . T.stripPrefix "::: {#fig:" -> Just t)) [] : _)
 
-pattern Figure :: LineNo -> Text -> Node
-pattern Figure l t <- Node
+pattern FigureN :: LineNo -> Text -> Node
+pattern FigureN l t <- Node
   (Just PosInfo{startLine = fromIntegral -> l})
   PARAGRAPH
   [ Node Nothing (IMAGE _ _) _
   , Node Nothing (TEXT (fmap identOnly . T.stripPrefix "{#fig:" -> Just t)) []
   ]
 
-pattern Table :: LineNo -> Text -> Node
-pattern Table l t <- Node
+pattern TableN :: LineNo -> Text -> Node
+pattern TableN l t <- Node
   (Just PosInfo{startLine = fromIntegral -> l})
   PARAGRAPH
   (HeadAndLast

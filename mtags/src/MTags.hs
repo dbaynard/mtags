@@ -165,25 +165,50 @@ instance Pretty MTag where
     ]
 
 mtagFromNodes :: TagFile -> ConvertTag MTag
-mtagFromNodes file mh l (t :| ts) = MTag
+mtagFromNodes file el l (t :| ts) = MTag
   { tagName    = TagName t
   , tagFile    = file
-  , tagAddress = TagAddress . mconcat $
+  , tagAddress = addressFromElement t el
+  , fields     = mconcat
+    [ [ Kind $ kindFromElement el ]
+    , [ Line l ]
+    , case reverse ts of
+      []     -> []
+      (n:ns) -> [Parent . ParentNames . fmap TagName $ n :| ns]
+    ]
+  }
+
+--------------------------------------------------
+-- ** Elements
+--------------------------------------------------
+
+addressFromElement :: Text -> Element -> TagAddress
+addressFromElement t = TagAddress . mconcat . f
+  where
+
+    f :: Element -> [Text]
+    f (Heading h) =
       [ "/^"
-      , "::: {#fig:" `onJust` mh $ \h ->
-          T.pack . replicate (fromIntegral h) $ '#'
+      , T.pack . replicate (fromIntegral h) $ '#'
       , " "
       , t
-      , "/" `onJust` mh $ \_ -> "$/"
+      , "$/"
       ]
-  , fields     = mconcat
-      [ [ Kind $ "i" `onJust` mh $ \_ -> "s" ]
-      , [ Line l ]
-      , case reverse ts of
-        []     -> []
-        (n:ns) -> [Parent . ParentNames . fmap TagName $ n :| ns]
+
+    f Figure =
+      [ "/"
+      , "{#fig:"
+      , t
+      , "/"
       ]
-  }
+
+    f Table = [ "/^Table: /" ]
+
+-- | When using with tagbar, set up the kinds as described by 'Element'.
+kindFromElement :: Element -> TagKind
+kindFromElement (Heading _) = "s"
+kindFromElement Figure      = "i"
+kindFromElement Table       = "t"
 
 --------------------------------------------------
 -- ** Possible field values
