@@ -71,6 +71,7 @@ tagsFromNode f = fst . g []
         ([f (Just n) l . report $ nstack], nstack)
       (FigureDiv l t)  -> ([f Nothing l . report $ stack :|> t], stack)
       (Figure    l t)  -> ([f Nothing l . report $ stack :|> t], stack)
+      (Table     l t)  -> ([f Nothing l . report $ stack :|> t], stack)
       _                -> ([], stack)
     report :: Seq Text -> NonEmpty Text
     report = NE.fromList . reverse . toList
@@ -100,6 +101,18 @@ pattern Figure l t <- Node
   [ Node Nothing (IMAGE _ _) _
   , Node Nothing (TEXT (fmap identOnly . T.stripPrefix "{#fig:" -> Just t)) []
   ]
+
+pattern Table :: LineNo -> Text -> Node
+pattern Table l t <- Node
+  (Just PosInfo{startLine = fromIntegral -> l})
+  PARAGRAPH
+  (HeadAndLast
+    ( Node Nothing (TEXT (T.stripPrefix "Table:" -> Just _)) _ )
+    ( Node Nothing (TEXT (fmap identOnly . T.stripPrefix "{#tbl:" -> Just t)) [] )
+  )
+
+pattern HeadAndLast :: a -> a -> [a]
+pattern HeadAndLast h l <- h : (reverse -> l:_)
 
 newtype HeadingLevel = HeadingLevel Word
   deriving stock (Generic)
