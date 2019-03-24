@@ -37,6 +37,7 @@ library:
   - cmark
   - generic-lens
   - prettyprinter
+  - raw-strings-qq
   - validity
   - validity-containers
   - validity-text

@@ -63,6 +63,7 @@
 {-# LANGUAGE OverloadedLists            #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE PackageImports             #-}
+{-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE TypeApplications           #-}
@@ -91,6 +92,7 @@ import qualified "rio" RIO.List                                        as L (any
 import           "rio" RIO.Seq                                         (Seq)
 import qualified "rio" RIO.Seq                                         as Seq (unstableSort)
 import qualified "rio" RIO.Text                                        as T (any, pack, toCaseFold)
+import           "raw-strings-qq" Text.RawString.QQ
 
 -- $setup
 --
@@ -196,8 +198,7 @@ addressFromElement t = TagAddress . mconcat . f
       ]
 
     f Figure =
-      [ "/"
-      , "\\%({#\\|=\"\\)fig:"
+      [ [r|/%({#|=")fig:|]
       , t
       , "/"
       ]
