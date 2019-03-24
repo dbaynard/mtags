@@ -63,6 +63,7 @@
 {-# LANGUAGE OverloadedLists            #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE PackageImports             #-}
+{-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE TypeApplications           #-}
@@ -91,6 +92,7 @@ import qualified "rio" RIO.List                                        as L (any
 import           "rio" RIO.Seq                                         (Seq)
 import qualified "rio" RIO.Seq                                         as Seq (unstableSort)
 import qualified "rio" RIO.Text                                        as T (any, pack, toCaseFold)
+import           "raw-strings-qq" Text.RawString.QQ
 
 -- $setup
 --
@@ -132,7 +134,7 @@ instance Pretty MTagsFile where
     ] <> foldMap (pure . pretty) (Seq.unstableSort ms)
 
 makeMTags :: TagFile -> Commonmark -> MTagsFile
-makeMTags file = MTagsFile . tagsFromCmark (mtagsFromHeading file)
+makeMTags file = MTagsFile . tagsFromCmark (mtagFromNodes file)
 
 --------------------------------------------------
 -- * Individual tags
@@ -164,24 +166,50 @@ instance Pretty MTag where
     , m ^. typed @TagFields . to pretty
     ]
 
-mtagsFromHeading :: TagFile -> HeadingTag MTag
-mtagsFromHeading file h l (t :| ts) = MTag
+mtagFromNodes :: TagFile -> ConvertTag MTag
+mtagFromNodes file el l (t :| ts) = MTag
   { tagName    = TagName t
   , tagFile    = file
-  , tagAddress = TagAddress . mconcat $
+  , tagAddress = addressFromElement t el
+  , fields     = mconcat
+    [ [ Kind $ kindFromElement el ]
+    , [ Line l ]
+    , case reverse ts of
+      []     -> []
+      (n:ns) -> [Parent . ParentNames . fmap TagName $ n :| ns]
+    ]
+  }
+
+--------------------------------------------------
+-- ** Elements
+--------------------------------------------------
+
+addressFromElement :: Text -> Element -> TagAddress
+addressFromElement t = TagAddress . mconcat . f
+  where
+
+    f :: Element -> [Text]
+    f (Heading h) =
       [ "/^"
       , T.pack . replicate (fromIntegral h) $ '#'
       , " "
       , t
       , "$/"
       ]
-  , fields     = mconcat
-      [ [Kind "s" , Line l]
-      , case reverse ts of
-        []     -> []
-        (n:ns) -> [Parent . ParentNames . fmap TagName $ n :| ns]
+
+    f Figure =
+      [ [r|/%({#|=")fig:|]
+      , t
+      , "/"
       ]
-  }
+
+    f Table = [ "/^Table: /" ]
+
+-- | When using with tagbar, set up the kinds as described by 'Element'.
+kindFromElement :: Element -> TagKind
+kindFromElement (Heading _) = "s"
+kindFromElement Figure      = "i"
+kindFromElement Table       = "t"
 
 --------------------------------------------------
 -- ** Possible field values
@@ -246,6 +274,10 @@ instance Pretty ParentNames where
 --------------------------------------------------
 -- * Helpers
 --------------------------------------------------
+
+onJust :: b -> Maybe a -> (a -> b) -> b
+onJust = flip . maybe
+infixl 6 `onJust`
 
 --------------------------------------------------
 -- ** PrettyPrinting

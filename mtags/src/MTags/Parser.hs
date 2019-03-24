@@ -25,7 +25,8 @@
 module MTags.Parser
   ( Commonmark
   , readCommonmark
-  , HeadingTag
+  , Element(..)
+  , ConvertTag
   , tagsFromCmark
   , tagsFromNode
   , HeadingLevel
@@ -41,8 +42,9 @@ import           "validity" Data.Validity
 import           "rio" RIO
 import           "rio" RIO.Seq                             (Seq ((:|>)))
 import qualified "rio" RIO.Seq                             as Seq (take)
+import qualified "rio" RIO.Text                            as T (stripPrefix, takeWhile)
 
-tagsFromCmark :: HeadingTag tag -> Commonmark -> Seq tag
+tagsFromCmark :: ConvertTag tag -> Commonmark -> Seq tag
 tagsFromCmark f = tagsFromNode f . commonmarkToNode [] . coerce
 
 newtype Commonmark = Commonmark Text
@@ -55,32 +57,83 @@ readCommonmark = fmap Commonmark . readFileUtf8
 -- * Filtering nodes
 --------------------------------------------------
 
-type HeadingTag tag = HeadingLevel -> LineNo -> NonEmpty Text -> tag
+-- | In vim, set up the Tagbar @kinds@ array as follows:
+--
+-- @
+-- \\ \'kinds\' : [
+--     \\ \'s:sections\',
+--     \\ \'i:images\',
+--     \\ \'t:tables\'
+-- \\ ],
+-- @
+data Element
+  = Heading HeadingLevel
+  | Figure
+  | Table
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving anyclass (Validity)
+
+type ConvertTag tag = Element -> LineNo -> NonEmpty Text -> tag
 
 -- TODO Non empty Seq!
-tagsFromNode :: forall tag . HeadingTag tag -> Node -> Seq tag
+tagsFromNode :: forall tag . ConvertTag tag -> Node -> Seq tag
 tagsFromNode f = fst . g []
   where
     g :: Seq Text -> Node -> (Seq tag, Seq Text)
     g = fix $ \go stack -> \case
-      (Document ns)    -> foldM go [] ns
+      (DocumentN ns)    -> foldM go [] ns
       -- This case shouldn't happen
-      (Heading 0 p ts) -> ([f 1 p ts], seqFrom [] ts)
-      (Heading n p ts) -> let nstack = seqFrom (Seq.take (fromIntegral n - 1) stack) ts in
-        ([f n p . NE.fromList . reverse . toList $ nstack], nstack)
-      _                -> ([], stack)
+      (HeadingN 0 l t) -> ([f (Heading 1) l $ [t]], [t])
+      (HeadingN n l t) -> let nstack = Seq.take (fromIntegral n - 1) stack :|> t in
+        ([f (Heading n) l . report $ nstack], nstack)
+      (FigureDivN l t)  -> ([f Figure l . report $ stack :|> t], stack)
+      (FigureN    l t)  -> ([f Figure l . report $ stack :|> t], stack)
+      (TableN     l t)  -> ([f Table l . report $ stack :|> t], stack)
+      _                 -> ([], stack)
+    report :: Seq Text -> NonEmpty Text
+    report = NE.fromList . reverse . toList
 
-seqFrom :: Foldable f => Seq a -> f a -> Seq a
-seqFrom = foldr (flip (:|>))
+pattern DocumentN :: [Node] -> Node
+pattern DocumentN ns <- Node _ DOCUMENT ns
 
-pattern Document :: [Node] -> Node
-pattern Document ns <- Node _ DOCUMENT ns
-
-pattern Heading :: HeadingTag Node
-pattern Heading n l t <- Node
+pattern HeadingN :: HeadingLevel -> LineNo -> Text -> Node
+pattern HeadingN n l t <- Node
   (Just PosInfo{startLine = fromIntegral -> l})
   (HEADING (fromIntegral -> n))
-  [Node Nothing (TEXT (pure -> t)) []]
+  [Node Nothing (TEXT t) []]
+
+identOnly :: Text -> Text
+identOnly = T.takeWhile (\x -> x /= ' ' && x /= '}' && x /= '\"')
+
+stripFigDiv :: Text -> Maybe Text
+stripFigDiv t = identOnly <$> do
+  T.stripPrefix "::: {#fig:" t <|> T.stripPrefix "<div id=\"fig:" t
+
+pattern FigureDivN :: LineNo -> Text -> Node
+pattern FigureDivN l t <- Node
+  (Just PosInfo{startLine = fromIntegral -> l})
+  PARAGRAPH
+  (Node Nothing (TEXT (stripFigDiv -> Just t)) [] : _)
+
+pattern FigureN :: LineNo -> Text -> Node
+pattern FigureN l t <- Node
+  (Just PosInfo{startLine = fromIntegral -> l})
+  PARAGRAPH
+  [ Node Nothing (IMAGE _ _) _
+  , Node Nothing (TEXT (fmap identOnly . T.stripPrefix "{#fig:" -> Just t)) []
+  ]
+
+pattern TableN :: LineNo -> Text -> Node
+pattern TableN l t <- Node
+  (Just PosInfo{startLine = fromIntegral -> l})
+  PARAGRAPH
+  (HeadAndLast
+    ( Node Nothing (TEXT (T.stripPrefix "Table:" -> Just _)) _ )
+    ( Node Nothing (TEXT (fmap identOnly . T.stripPrefix "{#tbl:" -> Just t)) [] )
+  )
+
+pattern HeadAndLast :: a -> a -> [a]
+pattern HeadAndLast h l <- h : (reverse -> l:_)
 
 newtype HeadingLevel = HeadingLevel Word
   deriving stock (Generic)
