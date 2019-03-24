@@ -25,7 +25,7 @@
 module MTags.Parser
   ( Commonmark
   , readCommonmark
-  , HeadingTag
+  , ConvertTag
   , tagsFromCmark
   , tagsFromNode
   , HeadingLevel
@@ -41,8 +41,9 @@ import           "validity" Data.Validity
 import           "rio" RIO
 import           "rio" RIO.Seq                             (Seq ((:|>)))
 import qualified "rio" RIO.Seq                             as Seq (take)
+import qualified "rio" RIO.Text                            as T (stripPrefix)
 
-tagsFromCmark :: HeadingTag tag -> Commonmark -> Seq tag
+tagsFromCmark :: ConvertTag tag -> Commonmark -> Seq tag
 tagsFromCmark f = tagsFromNode f . commonmarkToNode [] . coerce
 
 newtype Commonmark = Commonmark Text
@@ -55,32 +56,38 @@ readCommonmark = fmap Commonmark . readFileUtf8
 -- * Filtering nodes
 --------------------------------------------------
 
-type HeadingTag tag = HeadingLevel -> LineNo -> NonEmpty Text -> tag
+type ConvertTag tag = Maybe HeadingLevel -> LineNo -> NonEmpty Text -> tag
 
 -- TODO Non empty Seq!
-tagsFromNode :: forall tag . HeadingTag tag -> Node -> Seq tag
+tagsFromNode :: forall tag . ConvertTag tag -> Node -> Seq tag
 tagsFromNode f = fst . g []
   where
     g :: Seq Text -> Node -> (Seq tag, Seq Text)
     g = fix $ \go stack -> \case
       (Document ns)    -> foldM go [] ns
       -- This case shouldn't happen
-      (Heading 0 p ts) -> ([f 1 p ts], seqFrom [] ts)
-      (Heading n p ts) -> let nstack = seqFrom (Seq.take (fromIntegral n - 1) stack) ts in
-        ([f n p . NE.fromList . reverse . toList $ nstack], nstack)
+      (Heading 0 l t) -> ([f (Just 1) l $ [t]], [t])
+      (Heading n l t) -> let nstack = Seq.take (fromIntegral n - 1) stack :|> t in
+        ([f (Just n) l . report $ nstack], nstack)
+      (FigureDiv l t)  -> ([f Nothing l . report $ stack :|> "Fig:" <> t], stack)
       _                -> ([], stack)
-
-seqFrom :: Foldable f => Seq a -> f a -> Seq a
-seqFrom = foldr (flip (:|>))
+    report :: Seq Text -> NonEmpty Text
+    report = NE.fromList . reverse . toList
 
 pattern Document :: [Node] -> Node
 pattern Document ns <- Node _ DOCUMENT ns
 
-pattern Heading :: HeadingTag Node
+pattern Heading :: HeadingLevel -> LineNo -> Text -> Node
 pattern Heading n l t <- Node
   (Just PosInfo{startLine = fromIntegral -> l})
   (HEADING (fromIntegral -> n))
-  [Node Nothing (TEXT (pure -> t)) []]
+  [Node Nothing (TEXT t) []]
+
+pattern FigureDiv :: LineNo -> Text -> Node
+pattern FigureDiv l t <- Node
+  (Just PosInfo{startLine = fromIntegral -> l})
+  PARAGRAPH
+  (Node Nothing (TEXT (T.stripPrefix "::: {#fig:" -> Just t)) [] : _)
 
 newtype HeadingLevel = HeadingLevel Word
   deriving stock (Generic)

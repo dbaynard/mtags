@@ -132,7 +132,7 @@ instance Pretty MTagsFile where
     ] <> foldMap (pure . pretty) (Seq.unstableSort ms)
 
 makeMTags :: TagFile -> Commonmark -> MTagsFile
-makeMTags file = MTagsFile . tagsFromCmark (mtagsFromHeading file)
+makeMTags file = MTagsFile . tagsFromCmark (mtagFromNodes file)
 
 --------------------------------------------------
 -- * Individual tags
@@ -164,19 +164,21 @@ instance Pretty MTag where
     , m ^. typed @TagFields . to pretty
     ]
 
-mtagsFromHeading :: TagFile -> HeadingTag MTag
-mtagsFromHeading file h l (t :| ts) = MTag
+mtagFromNodes :: TagFile -> ConvertTag MTag
+mtagFromNodes file mh l (t :| ts) = MTag
   { tagName    = TagName t
   , tagFile    = file
   , tagAddress = TagAddress . mconcat $
       [ "/^"
-      , T.pack . replicate (fromIntegral h) $ '#'
+      , "::: {#fig:" `onJust` mh $ \h ->
+          T.pack . replicate (fromIntegral h) $ '#'
       , " "
       , t
-      , "$/"
+      , "[} ]" `onJust` mh $ \_ -> "$/"
       ]
   , fields     = mconcat
-      [ [Kind "s" , Line l]
+      [ [ Kind $ "i" `onJust` mh $ \_ -> "s" ]
+      , [ Line l ]
       , case reverse ts of
         []     -> []
         (n:ns) -> [Parent . ParentNames . fmap TagName $ n :| ns]
@@ -246,6 +248,10 @@ instance Pretty ParentNames where
 --------------------------------------------------
 -- * Helpers
 --------------------------------------------------
+
+onJust :: b -> Maybe a -> (a -> b) -> b
+onJust = flip . maybe
+infixl 6 `onJust`
 
 --------------------------------------------------
 -- ** PrettyPrinting
