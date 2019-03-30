@@ -25,6 +25,8 @@
 module MTags.Parser
   ( Commonmark
   , readCommonmark
+  , OutputFile(..)
+  , nodeFileFromMd
   , Element(..)
   , ConvertTag
   , tagsFromCmark
@@ -52,6 +54,12 @@ newtype Commonmark = Commonmark Text
 
 readCommonmark :: FilePath -> IO Commonmark
 readCommonmark = fmap Commonmark . readFileUtf8
+
+newtype OutputFile = OutputFile FilePath
+  deriving newtype (Show, Eq, IsString)
+
+nodeFileFromMd :: OutputFile -> FilePath -> IO ()
+nodeFileFromMd (OutputFile f) =  writeFileUtf8 f . tshow . commonmarkToNode [] . coerce <=< readCommonmark
 
 --------------------------------------------------
 -- * Filtering nodes
