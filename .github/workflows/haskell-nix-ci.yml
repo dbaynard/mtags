@@ -1,0 +1,29 @@
+name: Haskell Nix CI
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: cachix/install-nix-action@v10
+      with:
+        skip_adding_nixpkgs_channel: true
+
+    - name: Cachix setup
+      uses: cachix/cachix-action@v6
+      with:
+        name: dbaynard
+        signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+
+    - name: nix-build
+      run: nix-build
+
+    - name: nix-test
+      run: nix-shell --run "cabal test mtags-doctest"
