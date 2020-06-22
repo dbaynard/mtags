@@ -1,4 +1,11 @@
-{ nixpkgs ? import (import ./pinned-nixpkgs.nix { }) { }, compiler ? "default", root ? ./. }:
+{ nixpkgs ?
+  import
+    ( ({ owner, repo, rev }: builtins.fetchTarball {
+      url = "https://github.com/${owner}/${repo}/archive/${rev}.tar.gz";
+    }) (import ./pinned-nixpkgs.nix)) { }
+, compiler ? "default"
+, root ? ./.
+}:
 let
   hPkgs = nixpkgs.pkgs.haskellPackages;
   gitignore = nixpkgs.nix-gitignore.gitignoreSourcePure [ ./.gitignore ];
