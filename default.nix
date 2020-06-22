@@ -4,7 +4,7 @@
       url = "https://github.com/${owner}/${repo}/archive/${rev}.tar.gz";
     }) (import ./pinned-nixpkgs.nix)) { }
 , compiler ? "default"
-, root ? ./.
+, root ? ./mtags
 }:
 let
   hPkgs = nixpkgs.pkgs.haskellPackages;
