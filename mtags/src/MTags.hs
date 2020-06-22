@@ -103,7 +103,7 @@ import           "raw-strings-qq" Text.RawString.QQ
 --       { tagName = "Analysis of proteins"
 --       , tagFile = "cry.md"
 --       , tagAddress = "/^## Analysis of proteins$/"
---       , fields = [Kind "s", Line 197, Section "Methods"]
+--       , fields = [Kind "s", Line 197, Parent ["Methods"]]
 --       }
 -- :}
 
@@ -264,7 +264,7 @@ newtype TagKind = TagKind Text
 
 newtype ParentNames = ParentNames (NonEmpty TagName)
   deriving stock (Generic)
-  deriving newtype (Show, Eq, Ord, Validity)
+  deriving newtype (Show, Eq, Ord, Validity, GHC.IsList)
 
 instance Pretty ParentNames where
   pretty (ParentNames names) = intercalate "|" . fmap pretty . toList $ names
