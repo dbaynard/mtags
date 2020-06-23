@@ -76,7 +76,6 @@ module MTags
 
 import           "base" Data.Coerce                                    (coerce)
 import           "generic-lens" Data.Generics.Product
-import           "base" Data.List.NonEmpty                             (NonEmpty (..))
 import           "prettyprinter" Data.Text.Prettyprint.Doc
 import           "prettyprinter" Data.Text.Prettyprint.Doc.Render.Text (renderIO, renderLazy)
 import           "validity" Data.Validity
@@ -89,7 +88,6 @@ import           "this" MTags.Parser
 import           "rio" RIO
 import           "rio" RIO.FilePath                                    (takeFileName)
 import qualified "rio" RIO.List                                        as L (any)
-import           "rio" RIO.Seq                                         (Seq)
 import qualified "rio" RIO.Seq                                         as Seq (unstableSort)
 import qualified "rio" RIO.Text                                        as T (any, pack, toCaseFold)
 import           "raw-strings-qq" Text.RawString.QQ
