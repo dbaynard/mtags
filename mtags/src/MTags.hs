@@ -152,7 +152,7 @@ instance Ord MTag where
   compare = comparing tagName
 
 -- | >>> renderPretty exampleMTag
--- Analysis of proteins cry.md  /^## Analysis of proteins$/;" s line:197  section:Methods
+-- Analysis of proteins	cry.md	/^## Analysis of proteins$/;"	s	line:197	section:Methods
 instance Pretty MTag where
   pretty m = mconcat
     [ m ^. typed @TagName . to pretty
