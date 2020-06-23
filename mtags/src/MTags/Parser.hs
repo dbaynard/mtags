@@ -37,7 +37,6 @@ module MTags.Parser
 
 import           "cmark" CMark
 import           "base" Data.Coerce                        (coerce)
-import           "base" Data.List.NonEmpty                 (NonEmpty)
 import qualified "base" Data.List.NonEmpty                 as NE (fromList)
 import           "prettyprinter" Data.Text.Prettyprint.Doc
 import           "validity" Data.Validity

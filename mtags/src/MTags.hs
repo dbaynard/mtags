@@ -76,7 +76,6 @@ module MTags
 
 import           "base" Data.Coerce                                    (coerce)
 import           "generic-lens" Data.Generics.Product
-import           "base" Data.List.NonEmpty                             (NonEmpty (..))
 import           "prettyprinter" Data.Text.Prettyprint.Doc
 import           "prettyprinter" Data.Text.Prettyprint.Doc.Render.Text (renderIO, renderLazy)
 import           "validity" Data.Validity
@@ -89,7 +88,6 @@ import           "this" MTags.Parser
 import           "rio" RIO
 import           "rio" RIO.FilePath                                    (takeFileName)
 import qualified "rio" RIO.List                                        as L (any)
-import           "rio" RIO.Seq                                         (Seq)
 import qualified "rio" RIO.Seq                                         as Seq (unstableSort)
 import qualified "rio" RIO.Text                                        as T (any, pack, toCaseFold)
 import           "raw-strings-qq" Text.RawString.QQ
@@ -105,7 +103,7 @@ import           "raw-strings-qq" Text.RawString.QQ
 --       { tagName = "Analysis of proteins"
 --       , tagFile = "cry.md"
 --       , tagAddress = "/^## Analysis of proteins$/"
---       , fields = [Kind "s", Line 197, Section "Methods"]
+--       , fields = [Kind "s", Line 197, Parent ["Methods"]]
 --       }
 -- :}
 
@@ -154,7 +152,7 @@ instance Ord MTag where
   compare = comparing tagName
 
 -- | >>> renderPretty exampleMTag
--- Analysis of proteins cry.md  /^## Analysis of proteins$/;" s line:197  section:Methods
+-- Analysis of proteins	cry.md	/^## Analysis of proteins$/;"	s	line:197	section:Methods
 instance Pretty MTag where
   pretty m = mconcat
     [ m ^. typed @TagName . to pretty
@@ -266,7 +264,7 @@ newtype TagKind = TagKind Text
 
 newtype ParentNames = ParentNames (NonEmpty TagName)
   deriving stock (Generic)
-  deriving newtype (Show, Eq, Ord, Validity)
+  deriving newtype (Show, Eq, Ord, Validity, GHC.IsList)
 
 instance Pretty ParentNames where
   pretty (ParentNames names) = intercalate "|" . fmap pretty . toList $ names

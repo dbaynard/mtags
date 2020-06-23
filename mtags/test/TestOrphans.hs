@@ -5,6 +5,7 @@ module TestOrphans () where
 import           Data.GenValidity.Set  ()
 import           Data.GenValidity.Text ()
 import           MTags
+import           MTags.Parser
 import           Test.Validity
 
 instance GenUnchecked MTag
@@ -31,5 +32,5 @@ instance GenValid TagKind
 instance GenUnchecked LineNo
 instance GenValid LineNo
 
-instance GenUnchecked SectionName
-instance GenValid SectionName
+instance GenUnchecked ParentNames
+instance GenValid ParentNames
