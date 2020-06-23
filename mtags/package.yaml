@@ -18,10 +18,8 @@ ghc-options:
 - -Wall
 - -Wincomplete-uni-patterns
 - -Wincomplete-record-updates
-#- -Wmissing-import-lists
 - -Wcompat
 - -Wnoncanonical-monad-instances
-- -Wnoncanonical-monadfail-instances
 
 dependencies:
 - base >= 4.12.0.0 && < 5
