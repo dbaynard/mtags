@@ -1,0 +1,31 @@
+name: Docker
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: cachix/install-nix-action@v10
+      with:
+        skip_adding_nixpkgs_channel: true
+
+    - name: Cachix setup
+      uses: cachix/cachix-action@v6
+      with:
+        name: dbaynard
+        signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+
+    - name: docker nix-build
+      run: (cd docker; nix-build)
+
+    - name: Upload tar.gz container
+      uses: actions/upload-artifact@v2
+      with:
+        name: mtags-latest
+        path: docker/result
