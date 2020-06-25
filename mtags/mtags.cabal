@@ -1,0 +1,96 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: b23437eeebe421faf06a03556e6a95a071cfdb8b5f74e7bfa2605156969da259
+
+name:           mtags
+version:        0.1.0.0
+synopsis:       Generate ctags-compatible tags for (pandoc) markdown files.
+description:    See [README.md](https://github.com/dbaynard/mtags)
+category:       Development
+homepage:       https://github.com/dbaynard/mtags#readme
+bug-reports:    https://github.com/dbaynard/mtags/issues
+author:         David Baynard <haskell@baynard.dev>
+maintainer:     David Baynard <haskell@baynard.dev>
+copyright:      2019–2020 David Baynard
+license:        (BSD-3-Clause OR Apache-2.0)
+build-type:     Simple
+extra-source-files:
+    ../README.md
+    ../LICENSE
+
+source-repository head
+  type: git
+  location: https://github.com/dbaynard/mtags
+
+library
+  exposed-modules:
+      MTags
+      MTags.Parser
+  other-modules:
+      Paths_mtags
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances
+  build-depends:
+      base >=4.12.0.0 && <5
+    , cmark
+    , generic-lens
+    , prettyprinter
+    , raw-strings-qq
+    , rio
+    , validity
+    , validity-containers
+    , validity-text
+  default-language: Haskell2010
+
+executable mtags
+  main-is: Main.hs
+  other-modules:
+      Paths_mtags
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.12.0.0 && <5
+    , mtags
+    , optparse-generic
+    , rio
+  default-language: Haskell2010
+
+test-suite mtags-doctest
+  type: exitcode-stdio-1.0
+  main-is: test/doctest-driver.hs
+  other-modules:
+      Paths_mtags
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.12.0.0 && <5
+    , doctest
+    , doctest-driver-gen
+    , mtags
+    , rio
+  default-language: Haskell2010
+
+test-suite mtags-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      MTagsSpec
+      TestOrphans
+      Paths_mtags
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.12.0.0 && <5
+    , genvalidity-containers
+    , genvalidity-hspec
+    , genvalidity-text
+    , hspec
+    , mtags
+    , rio
+  default-language: Haskell2010
