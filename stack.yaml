@@ -1,0 +1,8 @@
+resolver: lts-16.1
+
+packages:
+- 'mtags'
+
+extra-deps: []
+
+allow-newer: true
