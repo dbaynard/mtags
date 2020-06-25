@@ -8,7 +8,7 @@
 }:
 let
   hPkgs = nixpkgs.pkgs.haskellPackages;
-  gitignore = nixpkgs.nix-gitignore.gitignoreSourcePure [ ./.gitignore ];
+  gitignore = nixpkgs.nix-gitignore.gitignoreSourcePure [ ./.gitignore ".git" ];
   # accepts a path as input
   # it will traverse the directory tree starting at `root`
   # the result is an attribute set, where the values are paths
