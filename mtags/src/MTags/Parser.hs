@@ -13,7 +13,6 @@
 {-# LANGUAGE DerivingVia                #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE NamedFieldPuns             #-}
 {-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE OverloadedLists            #-}
 {-# LANGUAGE OverloadedStrings          #-}
@@ -38,7 +37,7 @@ module MTags.Parser
 import           "cmark" CMark
 import           "base" Data.Coerce                        (coerce)
 import qualified "base" Data.List.NonEmpty                 as NE (fromList)
-import           "prettyprinter" Data.Text.Prettyprint.Doc
+import           "prettyprinter" Prettyprinter
 import           "validity" Data.Validity
 import           "rio" RIO
 import           "rio" RIO.Seq                             (Seq ((:|>)))
@@ -90,7 +89,7 @@ tagsFromNode f = fst . g []
     g = fix $ \go stack -> \case
       (DocumentN ns)    -> foldM go [] ns
       -- This case shouldn't happen
-      (HeadingN 0 l t) -> ([f (Heading 1) l $ [t]], [t])
+      (HeadingN 0 l t) -> ([f (Heading 1) l [t]], [t])
       (HeadingN n l t) -> let nstack = Seq.take (fromIntegral n - 1) stack :|> t in
         ([f (Heading n) l . report $ nstack], nstack)
       (FigureDivN l t)  -> ([f Figure l . report $ stack :|> t], stack)

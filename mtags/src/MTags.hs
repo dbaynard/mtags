@@ -52,7 +52,6 @@
 --                 (with an empty value).  It is used for a static tag.
 -- @
 
-{-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE DeriveAnyClass             #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE DerivingVia                #-}
@@ -76,8 +75,8 @@ module MTags
 
 import           "base" Data.Coerce                                    (coerce)
 import           "generic-lens" Data.Generics.Product
-import           "prettyprinter" Data.Text.Prettyprint.Doc
-import           "prettyprinter" Data.Text.Prettyprint.Doc.Render.Text (renderIO, renderLazy)
+import           "prettyprinter" Prettyprinter
+import           "prettyprinter" Prettyprinter.Render.Text             (renderIO, renderLazy)
 import           "validity" Data.Validity
 import           "validity-containers" Data.Validity.Sequence          ()
 import           "validity-containers" Data.Validity.Set               ()
