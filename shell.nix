@@ -1,5 +1,4 @@
 { lib
-, default
 , haskellPackages
 , mkShell
 , zsh
