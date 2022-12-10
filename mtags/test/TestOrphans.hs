@@ -2,11 +2,11 @@
 
 module TestOrphans () where
 
-import           Data.GenValidity.Set  ()
-import           Data.GenValidity.Text ()
-import           MTags
-import           MTags.Parser
-import           Test.Validity
+import Data.GenValidity.Set ()
+import Data.GenValidity.Text ()
+import MTags
+import MTags.Parser
+import Test.Validity
 
 instance GenValid MTag
 
