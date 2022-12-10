@@ -95,7 +95,7 @@ import           "raw-strings-qq" Text.RawString.QQ
 --
 -- >>> :set -XOverloadedStrings
 -- >>> :set -XOverloadedLists
--- >>> import Data.Text.Prettyprint.Doc.Render.String
+-- >>> import Prettyprinter.Render.String
 -- >>> let renderPretty = Prelude.putStr . renderString . layoutCompact . pretty
 -- >>> :{
 -- let exampleMTag = MTag
