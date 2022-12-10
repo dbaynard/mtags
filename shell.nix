@@ -37,7 +37,7 @@ mkShell {
 
   shellHook = ''
     export NIX_SHELL_NAME="${name}"
-    eval $(egrep ^export ${ghc}/bin/ghc)
+    eval $(egrep ^export ${ghcWithEnv}/bin/ghc)
     ${zsh}/bin/zsh
     exit 0
   '';
