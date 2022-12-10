@@ -21,5 +21,10 @@
         packages.${system} = self.overlays.default
           self.packages.${system}
           nixpkgs.legacyPackages.${system};
+
+        devShells.${system}.default =
+          nixpkgs.legacyPackages.${system}.callPackage ./shell.nix {
+            inherit (self.packages.${system}) default;
+          };
       });
 }
