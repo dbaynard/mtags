@@ -2,8 +2,8 @@
   description = "Markdown tags, i.e. mtags";
 
   inputs = {
-    dbaynard.url = "github:dbaynard/flakes";
-    dbaynard.inputs.nixpkgs.follows = "nixpkgs";
+    forestun.url = "github:fore-stun/flakes";
+    forestun.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = { nixpkgs, dbaynard, self, ... }:
